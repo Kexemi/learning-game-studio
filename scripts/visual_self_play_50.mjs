@@ -15,7 +15,7 @@ const REPO = path.resolve(ROOT, "..");
 const PORT = Number(process.env.LGS_PORT || 8791);
 const DEBUG_PORT = Number(process.env.LGS_DEBUG_PORT || 9236);
 const BASE = `http://127.0.0.1:${PORT}`;
-const ARTIFACT_DIR = path.join(REPO, "artifacts", "learning-game-v6", "visual-self-play-50");
+const ARTIFACT_DIR = path.join(REPO, "artifacts", "learning-game-v7", "visual-self-play-50");
 const CHROME_PATHS = [
   "C:/Program Files/Google/Chrome/Application/chrome.exe",
   "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe",
@@ -28,8 +28,9 @@ const goals = [
   ["opening", "The guide/orb should be visually dominant enough to imply direction."],
   ["opening", "The title must not turn the scene into a static hero section."],
   ["boarding", "Boarding should feel like a diegetic gate over the stage, not a form card."],
-  ["boarding", "The deck choice should be obvious without looking like a horizontal web list."],
-  ["boarding", "The board action should read as an event in the ride, not a CTA."],
+  ["route", "Route station should make risk/reward legible without becoming a settings menu."],
+  ["codex", "Codex should disclose mechanisms without hijacking the ride."],
+  ["route", "Choosing a route should feel meaningful before the run starts."],
   ["travel", "The run must immediately restore motion after boarding."],
   ["travel", "The player should understand they cannot interact yet."],
   ["travel", "The question should not dominate before the scene settles."],
@@ -47,33 +48,32 @@ const goals = [
   ["outcome", "The source/explanation should feel like an aftermath scroll, not quiz feedback."],
   ["outcome", "The next action should preserve momentum."],
   ["opening", "The first viewport should have strong visual depth."],
-  ["boarding", "There should be no sense of scrolling a page."],
+  ["route", "The station menu should read as part of the world, not a navbar."],
   ["travel", "The rail/light progress should feel embedded in the ride."],
   ["settled", "The player should not see dead or disabled controls as broken."],
   ["outcome", "The outcome panel should not flatten the experience into text."],
   ["travel", "The scene should carry source material as environment, not exposition."],
   ["settled", "The lever labels should help without becoming UI jargon."],
   ["opening", "The screen should invite watching before tapping."],
-  ["boarding", "The selected ride should be visually singled out."],
+  ["codex", "Mechanism detail should be optional and glanceable."],
   ["travel", "The guide line should be the primary instruction channel."],
   ["settled", "Interaction should be a rare quiet window."],
   ["outcome", "The ride should visibly acknowledge the answer."],
   ["opening", "The experience should not resemble a website landing page."],
-  ["boarding", "The gate should feel unlocked by the director, not just enabled."],
+  ["route", "Route cards should feel like strategic branches, not cosmetic mode buttons."],
   ["travel", "Camera/beam language should be visible enough to read as direction."],
   ["settled", "The question should feel staged inside a beam."],
   ["outcome", "The explanation should be subordinate to the ride reaction."],
   ["travel", "The moving world should occupy most of the viewport."],
   ["settled", "The player should see exactly one job: steer."],
   ["opening", "Ambient motion should surround the stage, not just sit behind it."],
-  ["boarding", "The deck capsule should feel like a boarding pass, not content metadata."],
+  ["codex", "Optional source context should not become the main experience."],
   ["travel", "Threat/heart meters should be readable but low-chrome."],
   ["settled", "The answer area should feel like a cockpit surface."],
   ["outcome", "The transition to continue should feel like resuming motion."],
   ["opening", "No static-card geometry should dominate the first impression."],
   ["boarding", "No separate web sections should be perceptible."],
   ["travel", "The player should feel carried by the ride between choices."],
-  ["settled", "The settle window should be the only moment that feels still."],
 ];
 
 function waitForHttp(url, ms = 10000) {
@@ -163,6 +163,17 @@ async function gotoPhase(cdp, phase) {
   await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.forceHomeSettled(); true");
   await waitForExpr(cdp, "document.getElementById('boardButton').disabled === false");
   if (phase === "boarding") return;
+  if (phase === "route") {
+    await evalExpr(cdp, "document.querySelector('[data-station=route]').click(); true");
+    await waitForExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot().station === 'route'");
+    return;
+  }
+  if (phase === "codex") {
+    await evalExpr(cdp, "document.querySelector('[data-station=codex]').click(); true");
+    await waitForExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot().station === 'codex'");
+    return;
+  }
+  await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.chooseRoute('transfer'); document.querySelector('[data-station=board]').click(); true");
   await evalExpr(cdp, "document.getElementById('boardButton').click(); true");
   await waitForExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot().screen === 'run'");
   if (phase === "travel") return;

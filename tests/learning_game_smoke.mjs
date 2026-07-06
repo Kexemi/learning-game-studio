@@ -1,7 +1,7 @@
 /**
- * V5 smoke: 50-loop director standard.
- * The product must behave as a fixed, guided animated experience: opening motion,
- * gated boarding, travel/reveal/settle phases, disabled inputs until settle, outcome before explanation.
+ * V7 smoke: reference-structured director standard.
+ * The product must behave as a fixed, guided animated experience with in-world station menus,
+ * real route choice, route preview, disabled inputs until settle, and outcome before explanation.
  */
 import http from "node:http";
 import { spawn } from "node:child_process";
@@ -15,7 +15,7 @@ const REPO = path.resolve(ROOT, "..");
 const PORT = Number(process.env.LGS_PORT || 8787);
 const DEBUG_PORT = Number(process.env.LGS_DEBUG_PORT || 9232);
 const BASE = `http://127.0.0.1:${PORT}`;
-const ARTIFACT_DIR = path.join(REPO, "artifacts", "learning-game-v6");
+const ARTIFACT_DIR = path.join(REPO, "artifacts", "learning-game-v7");
 const CHROME_PATHS = [
   "C:/Program Files/Google/Chrome/Application/chrome.exe",
   "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe",
@@ -105,9 +105,9 @@ async function fetchText(url) {
 async function runStaticContract() {
   const [manifest, appJs, html, css] = await Promise.all([
     fetchText(`${BASE}/content/pack-manifest.json`),
-    fetchText(`${BASE}/src/app.js?v=20260706f`),
+    fetchText(`${BASE}/src/app.js?v=20260706g`),
     fetchText(`${BASE}/index.html`),
-    fetchText(`${BASE}/src/styles.css?v=20260706f`),
+    fetchText(`${BASE}/src/styles.css?v=20260706g`),
   ]);
   const required = [
     [manifest, "nvidiaai-llm-memorization-capacity-20260706", "manifest contains current deck"],
@@ -117,9 +117,16 @@ async function runStaticContract() {
     [html, "focus-beam", "focus beam exists"],
     [html, "settle-gate", "settle gate exists"],
     [html, "decision-rack", "decision rack exists"],
-    [html, "src/app.js?v=20260706f", "v6 JS cache marker"],
-    [html, "src/styles.css?v=20260706f", "v6 CSS cache marker"],
-    [appJs, "visual-selfplay-50-v6", "v6 marker"],
+    [html, "station-menu", "station menu exists"],
+    [html, "route-chooser", "route chooser exists"],
+    [html, "codex-panel", "codex panel exists"],
+    [html, "route-strip", "route strip exists"],
+    [html, "src/app.js?v=20260706g", "v7 JS cache marker"],
+    [html, "src/styles.css?v=20260706g", "v7 CSS cache marker"],
+    [appJs, "reference-structure-v7", "v7 marker"],
+    [appJs, "routeModes", "route modes exist"],
+    [appJs, "chooseRoute", "debug route hook"],
+    [appJs, "renderRouteStrip", "route strip renderer"],
     [appJs, "forceHomeSettled", "home gate hook"],
     [appJs, "forceSceneSettled", "scene gate hook"],
     [appJs, "button.disabled = true", "input disabled outside settle"],
@@ -129,7 +136,10 @@ async function runStaticContract() {
     [css, "@keyframes shutterOpen", "opening animation"],
     [css, "@keyframes trackRush", "continuous track motion"],
     [css, ".director-camera[data-phase=\"settled\"]", "settled phase styling"],
-    [css, ".settle-gate[data-open=\"false\"]", "locked interaction styling"],
+    [css, ".station-menu", "station menu styling"],
+    [css, ".route-card", "route card styling"],
+    [css, ".route-strip", "route strip styling"],
+    [css, ".steer-lever em", "choice stakes styling"],
   ];
   for (const [haystack, needle, label] of required) {
     if (!haystack.includes(needle)) throw new Error(`static contract failed: ${label}`);
@@ -149,7 +159,7 @@ async function runSmoke() {
     await runStaticContract();
     const chrome = CHROME_PATHS.find((p) => existsSync(p));
     if (!chrome || typeof WebSocket === "undefined") {
-      console.log("VISUAL_SELFPLAY_50_V6_PASS static-contract");
+      console.log("REFERENCE_STRUCTURE_V7_PASS static-contract");
       return;
     }
     userDataDir = mkdtempSync(path.join(tmpdir(), "lgs-chrome-"));
@@ -173,9 +183,11 @@ async function runSmoke() {
     await cdp.send("Page.navigate", { url: `${BASE}/index.html` });
     await waitForExpr(cdp, "document.readyState === 'complete'");
     await waitForExpr(cdp, "window.__MECHANISM_RUN_DEBUG__ && document.querySelectorAll('.ride-capsule').length >= 1");
+    const loadError = await evalExpr(cdp, "document.getElementById('loadHint').textContent.startsWith('Could not load ride') ? document.getElementById('loadHint').textContent : ''");
+    if (loadError) throw new Error(loadError);
 
     const opening = await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot()");
-    if (opening.marker !== "visual-selfplay-50-v6" || opening.screen !== "home" || opening.homePhase !== "intro" || opening.bodyOverflow !== "hidden") {
+    if (opening.marker !== "reference-structure-v7" || opening.screen !== "home" || opening.homePhase !== "intro" || opening.bodyOverflow !== "hidden" || opening.station !== "board") {
       throw new Error(`opening is not a fixed cinematic stage ${JSON.stringify(opening)}`);
     }
     const openingShot = await screenshot(cdp, "phone-opening-camera.png");
@@ -186,10 +198,18 @@ async function runSmoke() {
 
     await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.forceHomeSettled(); true");
     await waitForExpr(cdp, "document.getElementById('boardButton').disabled === false");
+    await evalExpr(cdp, "document.querySelector('[data-station=route]').click(); true");
+    await waitForExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot().station === 'route' && document.querySelectorAll('.route-card').length === 3");
+    const routeShot = await screenshot(cdp, "phone-route-station.png");
+    await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.chooseRoute('boss'); document.querySelector('[data-station=codex]').click(); true");
+    await waitForExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot().routeMode === 'boss' && window.__MECHANISM_RUN_DEBUG__.snapshot().station === 'codex'");
+    const codexShot = await screenshot(cdp, "phone-codex-station.png");
+    await evalExpr(cdp, "document.querySelector('[data-station=board]').click(); true");
+    await waitForExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot().station === 'board'");
     await evalExpr(cdp, "document.getElementById('boardButton').click(); true");
     await waitForExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot().screen === 'run'");
     const travel = await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot()");
-    if (travel.phase !== "travel" || travel.choicesEnabled || !travel.hasCamera || !travel.hasBeam || !travel.hasGuide) {
+    if (travel.phase !== "travel" || travel.choicesEnabled || travel.routeMode !== "boss" || travel.routeNodes < 1 || !travel.hasCamera || !travel.hasBeam || !travel.hasGuide) {
       throw new Error(`travel phase failed locked-motion contract ${JSON.stringify(travel)}`);
     }
     const travelShot = await screenshot(cdp, "phone-travel-locked.png");
@@ -209,8 +229,9 @@ async function runSmoke() {
       guideText: document.getElementById('guideLine').textContent,
       cueText: document.getElementById('interactionCue').textContent,
       enabledChoices: [...document.querySelectorAll('.steer-lever')].filter((button) => !button.disabled).length,
+      moveLabels: [...document.querySelectorAll('.steer-lever')].map((button) => button.dataset.move).filter(Boolean),
     })`);
-    if (settled.phase !== "settled" || settled.enabledChoices < 2 || !settled.guideText || !settled.cueText) {
+    if (settled.phase !== "settled" || settled.enabledChoices < 2 || !settled.guideText || !settled.cueText || settled.moveLabels.length < 2) {
       throw new Error(`settled gate failed ${JSON.stringify(settled)}`);
     }
     if (settled.scrollWidth > settled.viewportWidth + 1) throw new Error(`horizontal overflow ${JSON.stringify(settled)}`);
@@ -225,7 +246,9 @@ async function runSmoke() {
     }
     const outcomeShot = await screenshot(cdp, "phone-outcome-scroll.png");
 
-    console.log("VISUAL_SELFPLAY_50_V6_PASS continuous-guided-experience");
+    console.log("REFERENCE_STRUCTURE_V7_PASS continuous-guided-experience");
+    console.log("REFERENCE_STRUCTURE_SCREENSHOT_ROUTE", routeShot);
+    console.log("REFERENCE_STRUCTURE_SCREENSHOT_CODEX", codexShot);
     console.log(`FIFTY_LOOP_SCREENSHOT_OPENING ${openingShot}`);
     console.log(`FIFTY_LOOP_SCREENSHOT_TRAVEL ${travelShot}`);
     console.log(`FIFTY_LOOP_SCREENSHOT_SETTLED ${settledShot}`);
@@ -242,6 +265,6 @@ async function runSmoke() {
 }
 
 runSmoke().catch((err) => {
-  console.error("VISUAL_SELFPLAY_50_V6_FAIL", err.message);
+  console.error("REFERENCE_STRUCTURE_V7_FAIL", err.message);
   process.exit(1);
 });

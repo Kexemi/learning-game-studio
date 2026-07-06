@@ -6,7 +6,7 @@ from statistics import mean
 from PIL import Image, ImageChops, ImageFilter, ImageStat, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
-ART = ROOT / "artifacts" / "learning-game-v6" / "visual-self-play-50"
+ART = ROOT / "artifacts" / "learning-game-v7" / "visual-self-play-50"
 RAW = ART / "raw-rounds.json"
 LEDGER = ART / "visual-self-play-ledger.md"
 SUMMARY = ART / "visual-self-play-summary.json"

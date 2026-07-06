@@ -6,9 +6,9 @@ Owner correction: v4 was directionally better, but still nowhere near enough. Th
 
 > The player should feel like they boarded an animated idea-machine. Reading happens inside the ride; buttons appear only when the ride stops and asks them to steer.
 
-## Literal 50 visual self-play loop distilled into v6 requirements
+## Literal 50 visual self-play loop distilled into v7 requirements
 
-| Loop | Critique pressure | v6 move |
+| Loop | Critique pressure | v7 move |
 |---:|---|---|
 | 1 | It still has page sections | Collapse into one fixed-height stage, no document scroll |
 | 2 | Tickets look like cards | Turn deck choice into a boarding gate with one active capsule |
@@ -37,7 +37,7 @@ Owner correction: v4 was directionally better, but still nowhere near enough. Th
 | 25 | Old v4 terms leak | Replace story/ticket/chrome labels with cockpit/stage/director terms |
 | 26 | Motion not testable | Smoke asserts phase lock, disabled choices, screenshots |
 | 27 | Visual proof too narrow | Capture opening, travel, settle, outcome, contact sheet |
-| 28 | Could regress to card shell | Static contract asserts v6 markers and banned old selectors absent |
+| 28 | Could regress to card shell | Static contract asserts v7 markers, station menu, route/codex, route strip, and banned old selectors absent |
 | 29 | Phone browser height risky | Smoke uses 390×665 phoneBrowser viewport |
 | 30 | Web page scroll would kill it | `body`/app/frame fixed; smoke checks overflow |
 | 31 | Background lacks depth | Add aurora, tunnel rings, parallax hills, spark field |
@@ -57,11 +57,11 @@ Owner correction: v4 was directionally better, but still nowhere near enough. Th
 | 45 | Need fewer dashboard numbers | Heart/static are tiny meter chips, not dashboard panels |
 | 46 | Need visible guidance from open to close | Guide text exists on home, travel, reveal, settle, outcome, ending |
 | 47 | Need internal standard | Constitution updated to reject static pages/card games |
-| 48 | Need deterministic proof | Smoke stdout `VISUAL_SELFPLAY_50_V6_PASS` |
+| 48 | Need deterministic proof | Smoke stdout `REFERENCE_STRUCTURE_V7_PASS` plus 50-round visual self-play receipts |
 | 49 | Need honest deploy gate | Commit locally; public push only after approval |
 | 50 | Need next-loop readiness | Keep artifacts and tests so the next 50 loops start from truth |
 
-## V6 PASS gates
+## V7 PASS gates
 
 - First paint is cinematic motion, not a page.
 - Home interaction is blocked until the director settles the opening.

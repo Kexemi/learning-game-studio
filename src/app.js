@@ -1,5 +1,5 @@
-const STORAGE_KEY = "mechanism-run-v6";
-const EXPERIENCE_MARKER = "visual-selfplay-50-v6";
+const STORAGE_KEY = "mechanism-run-v7";
+const EXPERIENCE_MARKER = "reference-structure-v7";
 const TIMING = { opening: 1450, approach: 780, reveal: 620, outcome: 380 };
 
 const els = {
@@ -10,7 +10,11 @@ const els = {
   homeGuideLine: document.getElementById("homeGuideLine"),
   boardingTitle: document.getElementById("boardingTitle"),
   boardingCopy: document.getElementById("boardingCopy"),
+  boardingGate: document.getElementById("boardingGate"),
   boardButton: document.getElementById("boardButton"),
+  stationMenu: document.getElementById("stationMenu"),
+  routeChooser: document.getElementById("routeChooser"),
+  codexPanel: document.getElementById("codexPanel"),
   deckList: document.getElementById("deckList"),
   loadHint: document.getElementById("loadHint"),
   runArena: document.getElementById("runArena"),
@@ -19,6 +23,7 @@ const els = {
   staticText: document.getElementById("staticText"),
   directorCamera: document.getElementById("directorCamera"),
   runMap: document.getElementById("runMap"),
+  routeStrip: document.getElementById("routeStrip"),
   guideLine: document.getElementById("guideLine"),
   storyCounter: document.getElementById("storyCounter"),
   enemyAvatar: document.getElementById("enemyAvatar"),
@@ -48,6 +53,8 @@ const state = {
   manifest: null,
   packs: new Map(),
   activePackId: null,
+  station: "board",
+  routeMode: "guided",
   progress: loadProgress(),
   run: null,
   timers: [],
@@ -62,6 +69,49 @@ const worlds = [
   { key: "evidence", icon: "✦", name: "Proof Owl", place: "Evidence Orchard", travel: "Claims hang like fruit. The guide waits for the one with proof behind it." },
 ];
 const leverLabels = ["ease left", "cut inward", "hold center", "jump rail"];
+const routeModes = {
+  guided: {
+    label: "Guided Path",
+    short: "best first run",
+    risk: "low static",
+    reward: "clear sequence",
+    copy: "A Duolingo-style path: the next best scene is obvious and the guide keeps the player moving.",
+    hp: 100,
+    staticBoost: 1,
+    hitBoost: 1,
+    verbs: ["trace proof", "name mechanism", "hold units", "reject decoy"],
+  },
+  boss: {
+    label: "Boss Climb",
+    short: "risk / reward",
+    risk: "+30% jolts",
+    reward: "+combo bite",
+    copy: "A Slay-the-Spire-style route: the player knowingly chooses pressure for stronger rewards.",
+    hp: 92,
+    staticBoost: 1.25,
+    hitBoost: 1.3,
+    verbs: ["call bluff", "cut false path", "pressure test", "lock claim"],
+  },
+  transfer: {
+    label: "Transfer Trial",
+    short: "no-hint agency",
+    risk: "less scaffolding",
+    reward: "deeper memory",
+    copy: "A mastery route: fewer hints, more applied choice, and explanation only after consequence.",
+    hp: 96,
+    staticBoost: 1.12,
+    hitBoost: 1.15,
+    verbs: ["apply elsewhere", "find boundary", "choose exception", "compress rule"],
+  },
+};
+function activeRoute() { return routeModes[state.routeMode] || routeModes.guided; }
+function choiceMove(index) {
+  const route = activeRoute();
+  return {
+    verb: route.verbs[index % route.verbs.length],
+    stakes: `${route.risk} · ${route.reward}`,
+  };
+}
 
 function loadProgress() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{\"completed\":{}}"); }
@@ -93,6 +143,7 @@ function setHomePhase(phase) {
   els.app.dataset.homePhase = phase;
   const ready = phase === "board";
   els.boardButton.disabled = !ready || !state.activePackId;
+  els.stationMenu.querySelectorAll("button[data-station]").forEach((button) => { button.disabled = !ready; });
   document.querySelectorAll(".ride-capsule").forEach((button) => { button.disabled = !ready; });
   if (phase === "intro") {
     els.homeGuideLine.textContent = "The camera is opening. Let the source become a ride.";
@@ -116,7 +167,54 @@ function startOpening() {
 }
 function activePackTitle() {
   const pack = state.packs.get(state.activePackId);
-  return pack ? `${pack.title} · ${(pack.questions || []).length} scenes` : "Choose a ride capsule.";
+  return pack ? `${pack.title} · ${(pack.questions || []).length} scenes · ${activeRoute().label}` : "Choose a ride capsule.";
+}
+function setStation(station) {
+  state.station = station;
+  els.app.dataset.station = station;
+  els.stationMenu.querySelectorAll("button[data-station]").forEach((button) => {
+    const active = button.dataset.station === station;
+    button.setAttribute("aria-current", active ? "page" : "false");
+  });
+  els.boardingGate.hidden = station !== "board";
+  els.deckList.hidden = station !== "board";
+  els.routeChooser.hidden = station !== "route";
+  els.codexPanel.hidden = station !== "codex";
+}
+function renderRouteChooser() {
+  els.routeChooser.innerHTML = Object.entries(routeModes).map(([key, route], index) => `
+    <button type="button" class="route-card" data-route="${key}" data-active="${key === state.routeMode ? "true" : "false"}">
+      <span class="route-number">0${index + 1}</span>
+      <strong>${escapeHtml(route.label)}</strong>
+      <small>${escapeHtml(route.short)} · ${escapeHtml(route.risk)}</small>
+      <em>${escapeHtml(route.copy)}</em>
+    </button>
+  `).join("");
+  els.routeChooser.querySelectorAll(".route-card").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.routeMode = button.dataset.route;
+      renderRouteChooser();
+      renderDeckList();
+      renderCodexPanel();
+      setHomePhase(els.app.dataset.homePhase || "board");
+    });
+  });
+}
+function renderCodexPanel() {
+  const pack = state.packs.get(state.activePackId);
+  if (!pack) {
+    els.codexPanel.innerHTML = `<p class="system-label">codex</p><h2>No ride loaded.</h2>`;
+    return;
+  }
+  const tags = new Map();
+  (pack.questions || []).forEach((q) => (q.mechanism_tags || []).forEach((tag) => tags.set(tag, (tags.get(tag) || 0) + 1)));
+  const tagRows = [...tags.entries()].slice(0, 9).map(([tag, count]) => `<li><span>${escapeHtml(tag)}</span><b>${count}</b></li>`).join("");
+  els.codexPanel.innerHTML = `
+    <p class="system-label">codex</p>
+    <h2>${escapeHtml(pack.game_hooks?.arena || pack.title)}</h2>
+    <p>${escapeHtml(activeRoute().label)} turns this deck into ${escapeHtml((pack.questions || []).length)} staged mechanism encounters.</p>
+    <ul>${tagRows || "<li><span>mechanisms loading</span><b>0</b></li>"}</ul>
+  `;
 }
 function renderDeckList() {
   els.deckList.innerHTML = "";
@@ -152,6 +250,8 @@ function renderDeckList() {
     els.deckList.appendChild(capsule);
   });
   if (els.app.dataset.homePhase === "board") setHomePhase("board");
+  renderRouteChooser();
+  renderCodexPanel();
 }
 function pickWorld(question, index) {
   const tags = (question.mechanism_tags || []).map((tag) => String(tag).toLowerCase());
@@ -177,6 +277,18 @@ function renderRailLights() {
     light.dataset.state = index === run.index ? "current" : scene.state;
     els.runMap.appendChild(light);
   });
+  renderRouteStrip();
+}
+function renderRouteStrip() {
+  const run = state.run;
+  if (!run) return;
+  const route = routeModes[run.routeMode] || routeModes.guided;
+  const windowScenes = run.scenes.slice(run.index, run.index + 3);
+  els.routeStrip.innerHTML = windowScenes.map((scene, offset) => {
+    const stage = offset === 0 ? "now" : `next ${offset}`;
+    const risk = scene.q.transfer_type === "no_hint" ? "transfer" : scene.world.place;
+    return `<span class="route-node" data-now="${offset === 0 ? "true" : "false"}"><b>${escapeHtml(stage)}</b><strong>${escapeHtml(scene.world.name)}</strong><small>${escapeHtml(risk)}</small></span>`;
+  }).join("") || `<span class="route-node" data-now="true"><b>arrival</b><strong>${escapeHtml(route.label)}</strong><small>route clear</small></span>`;
 }
 function renderMeters() {
   const run = state.run;
@@ -197,11 +309,13 @@ function setRunPhase(phase, line, cue) {
 function renderLevers(scene) {
   els.choices.innerHTML = "";
   scene.q.choices.forEach((choice, index) => {
+    const move = choiceMove(index);
     const button = document.createElement("button");
     button.type = "button";
     button.className = "steer-lever";
+    button.dataset.move = move.verb;
     button.disabled = true;
-    button.innerHTML = `<span>${escapeHtml(leverLabels[index] || "steer")}</span><strong>${escapeHtml(choice)}</strong>`;
+    button.innerHTML = `<span>${escapeHtml(move.verb)}</span><strong>${escapeHtml(choice)}</strong><em>${escapeHtml(move.stakes)}</em>`;
     button.addEventListener("click", () => answerScene(index, button));
     els.choices.appendChild(button);
   });
@@ -212,8 +326,10 @@ function startRun(packId = state.activePackId) {
   if (!pack) return;
   const manifestEntry = state.manifest.packs.find((entry) => entry.pack_id === packId) || {};
   const scenes = buildScenes(pack);
-  state.run = { packId, pack, manifestEntry, scenes, index: 0, hp: 100, staticMax: Math.max(96, scenes.length * 18), static: Math.max(96, scenes.length * 18), combo: 0, bestCombo: 0, correct: 0, phase: "travel", answers: [] };
-  els.runArena.textContent = manifestEntry.arena || pack.game_hooks?.arena || "guided rail";
+  const route = activeRoute();
+  const staticMax = Math.round(Math.max(96, scenes.length * 18) * route.staticBoost);
+  state.run = { packId, pack, manifestEntry, scenes, routeMode: state.routeMode, index: 0, hp: route.hp, staticMax, static: staticMax, combo: 0, bestCombo: 0, correct: 0, phase: "travel", answers: [] };
+  els.runArena.textContent = `${route.label} · ${manifestEntry.arena || pack.game_hooks?.arena || "guided rail"}`;
   els.runTitle.textContent = pack.title;
   showView("run");
   beginScene();
@@ -233,10 +349,11 @@ function beginScene() {
   renderLevers(scene);
   renderRailLights();
   renderMeters();
-  setRunPhase("travel", scene.world.travel, "Do not steer yet — the scene is still moving.");
-  timer(() => setRunPhase("reveal", `${scene.world.name} enters the beam. The guide is compressing the claim into one steerable moment.`, "Watch the beam. The levers are not ready."), TIMING.approach);
+  const route = routeModes[run.routeMode] || routeModes.guided;
+  setRunPhase("travel", `${route.label}: ${scene.world.travel}`, "Do not steer yet — read the path, not the buttons.");
+  timer(() => setRunPhase("reveal", `${scene.world.name} enters the beam. The route preview tells you what kind of decision this is.`, "Watch the beam. The levers are not ready."), TIMING.approach);
   timer(() => {
-    setRunPhase("settled", "The ride has settled. Steer once, then let the motion answer.", "Your turn: choose the lever that keeps the mechanism true.");
+    setRunPhase("settled", `${route.label} has settled. Choose one move with a clear stake.`, "Your turn: pick the lever whose consequence you can defend.");
     [...els.choices.children].forEach((button) => { button.disabled = false; });
   }, TIMING.approach + TIMING.reveal);
 }
@@ -245,6 +362,7 @@ function answerScene(choiceIndex, button) {
   if (!run || run.phase !== "settled") return;
   const scene = run.scenes[run.index];
   const q = scene.q;
+  const route = routeModes[run.routeMode] || routeModes.guided;
   const correct = choiceIndex === q.correct_index;
   [...els.choices.children].forEach((child) => { child.disabled = true; });
   button.classList.add(correct ? "is-correct" : "is-wrong");
@@ -252,7 +370,7 @@ function answerScene(choiceIndex, button) {
   if (right) right.classList.add("is-correct");
   setRunPhase("outcome", "The stage reacts before the explanation arrives…", "Watch the consequence. Then roll onward.");
   if (correct) {
-    const damage = Math.min(run.static, 16 + run.combo * 5 + (q.transfer_type === "no_hint" ? 8 : 0));
+    const damage = Math.min(run.static, Math.round((16 + run.combo * 5 + (q.transfer_type === "no_hint" ? 8 : 0)) * route.staticBoost));
     run.static -= damage;
     run.combo += 1;
     run.bestCombo = Math.max(run.bestCombo, run.combo);
@@ -262,11 +380,12 @@ function answerScene(choiceIndex, button) {
     els.directorCamera.dataset.result = "clear";
     els.feedbackVerdict.textContent = `The wheel catches. Static falls by ${damage}.`;
   } else {
-    run.hp = Math.max(1, run.hp - scene.hit);
+    const hit = Math.round(scene.hit * route.hitBoost);
+    run.hp = Math.max(1, run.hp - hit);
     run.combo = 0;
     scene.state = "wounded";
     els.directorCamera.dataset.result = "wobble";
-    els.feedbackVerdict.textContent = `${scene.world.name} jolts the rail. Heart drops by ${scene.hit}.`;
+    els.feedbackVerdict.textContent = `${scene.world.name} jolts the rail. Heart drops by ${hit}.`;
   }
   run.answers.push({ id: q.id, correct, hp: run.hp, static: run.static });
   els.feedbackBody.textContent = q.explanation;
@@ -290,13 +409,14 @@ function finishRun() {
   const score = Math.round((run.correct / total) * 100);
   const rank = rankRun(score, run.hp, run.bestCombo);
   const reward = run.manifestEntry.reward_skin || run.pack.game_hooks?.reward_skin || "Mechanism token";
-  state.progress.completed[run.pack.pack_id] = { score, rank, hp: run.hp, bestCombo: run.bestCombo, at: Date.now() };
+  const route = routeModes[run.routeMode] || routeModes.guided;
+  state.progress.completed[run.pack.pack_id] = { score, rank, hp: run.hp, bestCombo: run.bestCombo, route: run.routeMode, at: Date.now() };
   saveProgress();
   renderDeckList();
   els.summaryTitle.textContent = score >= 70 ? "The idea keeps moving in you." : "The guide marks the weak turns.";
   els.summaryScore.textContent = `${run.correct}/${total} scenes held · rank ${rank} · heart ${run.hp}`;
   els.masteryFill.style.width = `${score}%`;
-  els.summaryReward.textContent = score >= 70 ? `Unlocked: ${reward}. You rode the mechanism instead of reading around it.` : "Ride again. The second pass should feel less like guessing and more like steering.";
+  els.summaryReward.textContent = score >= 70 ? `Unlocked: ${reward}. ${route.label} turned the lesson into decisions, not menu hunting.` : `Ride ${route.label} again. The second pass should feel less like guessing and more like steering.`;
   els.resultGrid.innerHTML = `<div><span>${rank}</span><small>rank</small></div><div><span>${run.bestCombo}</span><small>best wheel</small></div><div><span>${run.static}</span><small>static left</small></div>`;
   els.summaryTags.innerHTML = "";
   const tags = new Set();
@@ -314,6 +434,7 @@ async function boot() {
     for (const entry of state.manifest.packs) state.packs.set(entry.pack_id, await fetchJson(entry.path));
     state.activePackId = state.manifest.default_pack_id || state.manifest.packs?.[0]?.pack_id;
     renderDeckList();
+    setStation("board");
     startOpening();
   } catch (err) {
     els.loadHint.hidden = false;
@@ -324,6 +445,11 @@ async function boot() {
 els.boardButton.addEventListener("click", () => {
   if (els.app.dataset.homePhase !== "board" || els.boardButton.disabled) return;
   startRun(state.activePackId);
+});
+els.stationMenu.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-station]");
+  if (!button || button.disabled) return;
+  setStation(button.dataset.station);
 });
 els.btnNext.addEventListener("click", () => {
   if (!state.run) return;
@@ -338,6 +464,14 @@ window.__MECHANISM_RUN_DEBUG__ = {
   marker: EXPERIENCE_MARKER,
   state,
   forceHomeSettled() { clearTimers(); setHomePhase("board"); },
+  chooseRoute(mode) {
+    if (!routeModes[mode]) return false;
+    state.routeMode = mode;
+    renderRouteChooser();
+    renderDeckList();
+    renderCodexPanel();
+    return true;
+  },
   forceSceneSettled() {
     if (!state.run) return;
     clearTimers();
@@ -348,6 +482,10 @@ window.__MECHANISM_RUN_DEBUG__ = {
     const run = state.run;
     return run ? {
       marker: EXPERIENCE_MARKER,
+      station: state.station,
+      routeMode: run.routeMode,
+      routeNodes: document.querySelectorAll('.route-node').length,
+      routeCards: document.querySelectorAll('.route-card').length,
       screen: els.app.dataset.screen,
       homePhase: els.app.dataset.homePhase,
       phase: run.phase,
@@ -364,6 +502,10 @@ window.__MECHANISM_RUN_DEBUG__ = {
       frameHeight: Math.round(document.querySelector(".director-frame").getBoundingClientRect().height),
     } : {
       marker: EXPERIENCE_MARKER,
+      station: state.station,
+      routeMode: state.routeMode,
+      routeNodes: document.querySelectorAll('.route-node').length,
+      routeCards: document.querySelectorAll('.route-card').length,
       screen: els.app.dataset.screen,
       homePhase: els.app.dataset.homePhase,
       phase: null,

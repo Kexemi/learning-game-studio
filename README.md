@@ -19,7 +19,7 @@ Localhost/LAN links are not valid Telegram handoffs; use GitHub Pages for owner 
 
 ## Experience loop
 
-This is not a flashcard viewer, web-page game, or static card loop. V6 adds a literal 50-round visual self-play lane: Hermes drives phone-browser playtests, sets one big-picture goal per round, captures screenshots, scores the experience, and then applies the strongest findings. The current shell is a fixed-stage ride: opening motion, gated boarding, travel/reveal before input, levers disabled until settle, and explanation only after consequence.
+This is not a flashcard viewer, web-page game, or static card loop. V7 is reference-structured: the first screen is an in-world Station Gate, not a home page; Board is the guided default, Route changes real risk/reward mechanics, Codex is optional disclosure, and choices read as verbs with stakes. The literal 50-round visual self-play lane still runs on every hardening pass: Hermes drives phone-browser playtests, sets one big-picture goal per round, captures screenshots, scores the experience, and preserves the ledger/contact sheet.
 
 ## Verify
 

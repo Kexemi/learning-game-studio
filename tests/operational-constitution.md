@@ -16,9 +16,14 @@ Owner correction: v4 was not enough. The bar is roughly “50 more loops”: fro
 | Scene rhythm | Each learning prompt moves through travel/reveal/settled/outcome phases. |
 | Consequence first | Answer changes stage result before explanation/source text appears. |
 | Regression bans | Old shell terms/classes (`story-stage`, `story-ticket`, `ticket-dock`, `narrator-bubble`) are absent. |
-| Phone proof | `390x665` smoke captures opening, travel, settled levers, and outcome under `artifacts/learning-game-v6/`. |
-| Literal 50 loops | `scripts/visual_self_play_50.mjs` drives 50 phone-browser rounds, each with its own big-picture goal and screenshot. |
-| Loop analysis | `scripts/analyze_visual_self_play.py` scores the screenshots and writes a ledger/contact sheet under `artifacts/learning-game-v6/visual-self-play-50/`. |
+| Reference-derived structure | `docs/REFERENCE-MAP-V7.md` separates good/bad menu/gameplay patterns before implementation. |
+| Station menu | Home has Board / Route / Codex in-world stations, not a navbar/settings page. |
+| Real route choice | Route changes risk/reward, HP/static math, and lever verbs before the run starts. |
+| Route preview | Run screen shows current/next encounter structure with `route-strip` nodes. |
+| Choice verbs | Steering levers include action verbs + answer payload + stakes, not bare quiz answers. |
+| Phone proof | `390x665` smoke captures opening, route, codex, travel, settled levers, and outcome under `artifacts/learning-game-v7/`. |
+| Literal 50 loops | `scripts/visual_self_play_50.mjs` drives 50 phone-browser rounds, including route/codex/menu phases, each with its own big-picture goal and screenshot. |
+| Loop analysis | `scripts/analyze_visual_self_play.py` scores the screenshots and writes a ledger/contact sheet under `artifacts/learning-game-v7/visual-self-play-50/`. |
 
 Command bundle:
 
@@ -33,10 +38,12 @@ Expected stdout includes:
 
 ```text
 AUDIT PASS
-VISUAL_SELFPLAY_50_V6_PASS continuous-guided-experience
-FIFTY_LOOP_SCREENSHOT_OPENING .../artifacts/learning-game-v6/phone-opening-camera.png
-FIFTY_LOOP_SCREENSHOT_TRAVEL .../artifacts/learning-game-v6/phone-travel-locked.png
-FIFTY_LOOP_SCREENSHOT_SETTLED .../artifacts/learning-game-v6/phone-settled-levers.png
+REFERENCE_STRUCTURE_V7_PASS continuous-guided-experience
+REFERENCE_STRUCTURE_SCREENSHOT_ROUTE .../artifacts/learning-game-v7/phone-route-station.png
+REFERENCE_STRUCTURE_SCREENSHOT_CODEX .../artifacts/learning-game-v7/phone-codex-station.png
+FIFTY_LOOP_SCREENSHOT_OPENING .../artifacts/learning-game-v7/phone-opening-camera.png
+FIFTY_LOOP_SCREENSHOT_TRAVEL .../artifacts/learning-game-v7/phone-travel-locked.png
+FIFTY_LOOP_SCREENSHOT_SETTLED .../artifacts/learning-game-v7/phone-settled-levers.png
 VISUAL_SELF_PLAY_CAPTURE_PASS 50
 VISUAL_SELF_PLAY_ANALYSIS_PASS 50
 ```

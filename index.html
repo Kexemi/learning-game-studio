@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#03040b" />
-  <title>Mechanism Run — Visual Self-Play Director</title>
-  <link rel="stylesheet" href="src/styles.css?v=20260706f" />
+  <title>Mechanism Run — Reference-Structured Director</title>
+  <link rel="stylesheet" href="src/styles.css?v=20260706g" />
 </head>
 <body>
-  <div id="app" class="director-app" data-screen="home" data-home-phase="intro" data-version="visual-selfplay-50-v6">
+  <div id="app" class="director-app" data-screen="home" data-home-phase="intro" data-version="reference-structure-v7" data-station="board">
     <div class="world-bleed" aria-hidden="true">
       <span class="bleed b1"></span><span class="bleed b2"></span><span class="noise"></span>
     </div>
@@ -31,6 +31,15 @@
             <p id="homeGuideLine">The camera is opening. Let the source become a ride.</p>
           </div>
         </div>
+
+        <nav class="station-menu" id="stationMenu" aria-label="Station menu">
+          <button type="button" data-station="board" aria-current="page"><span>01</span><strong>Board</strong><small>next ride</small></button>
+          <button type="button" data-station="route"><span>02</span><strong>Route</strong><small>risk shape</small></button>
+          <button type="button" data-station="codex"><span>03</span><strong>Codex</strong><small>what changes</small></button>
+        </nav>
+
+        <div class="route-chooser" id="routeChooser" hidden aria-label="Route choice panel"></div>
+        <div class="codex-panel" id="codexPanel" hidden aria-label="Mechanism codex panel"></div>
 
         <div class="boarding-gate" id="boardingGate" aria-live="polite">
           <div>
@@ -69,6 +78,7 @@
           <div class="claim-spirit" id="claimSpirit" aria-hidden="true"><span id="enemyAvatar">◈</span></div>
 
           <div class="rail-lights" id="runMap" aria-label="Scene rail lights"></div>
+          <div class="route-strip" id="routeStrip" aria-label="Upcoming route structure"></div>
 
           <div class="subtitle-track" id="subtitleTrack">
             <p class="system-label" id="storyCounter">scene 1</p>
@@ -111,6 +121,6 @@
       </section>
     </main>
   </div>
-  <script src="src/app.js?v=20260706f" type="module"></script>
+  <script src="src/app.js?v=20260706g" type="module"></script>
 </body>
 </html>
