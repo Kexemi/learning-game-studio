@@ -17,6 +17,10 @@ python -m http.server 8765 --bind 0.0.0.0
 
 Localhost/LAN links are not valid Telegram handoffs; use GitHub Pages for owner testing from phone.
 
+## Game loop
+
+This is not a flashcard viewer. A deck runs as a compact mission: map nodes, player HP, boss/threat HP, enemy encounters, combo, combat log, move-framed choices, and a ranked reward summary.
+
 ## Verify
 
 ```bash

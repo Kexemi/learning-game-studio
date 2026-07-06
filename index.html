@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0f1419" />
+  <meta name="theme-color" content="#080d14" />
   <title>Mechanism Run — Learn by playing</title>
-  <link rel="stylesheet" href="src/styles.css?v=20260706a" />
+  <link rel="stylesheet" href="src/styles.css?v=20260706b" />
 </head>
 <body>
   <div id="app" class="app-shell" data-screen="home">
@@ -18,38 +18,75 @@
         </div>
       </div>
       <div class="streak-pill" id="streakPill" hidden>
-        <span id="streakLabel">0 mastered</span>
+        <span id="streakLabel">0 cleared</span>
       </div>
     </header>
 
     <main class="stage">
       <section class="screen screen-active" data-view="home" id="viewHome">
-        <p class="lede">Turn dense threads into short runs. Pick a deck, answer under light pressure, leave with the mechanism—not the skim.</p>
+        <div class="hero-panel">
+          <div class="orbital-rings" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+          <p class="hero-kicker">Run decks as missions</p>
+          <h2>Beat the boss by proving the mechanism.</h2>
+          <p class="lede">Each source becomes a short combat run: scout the claim, choose the move that survives pressure, protect your HP, build combo, and unlock the mechanism badge.</p>
+        </div>
         <div id="deckList" class="deck-list" role="list"></div>
-        <p class="hint" id="loadHint">Loading decks…</p>
+        <p class="hint" id="loadHint">Loading missions…</p>
       </section>
 
       <section class="screen" data-view="run" id="viewRun" hidden>
         <div class="run-header">
-          <button type="button" class="ghost-btn" id="btnExitRun" aria-label="Exit run">← Decks</button>
+          <button type="button" class="ghost-btn compact" id="btnExitRun" aria-label="Exit run">← Missions</button>
           <div class="run-meta">
             <p class="run-arena" id="runArena"></p>
             <p class="run-title" id="runTitle"></p>
           </div>
         </div>
-        <div class="progress-track" aria-hidden="true">
-          <div class="progress-fill" id="progressFill"></div>
-        </div>
-        <p class="progress-label" id="progressLabel"></p>
+
+        <div class="run-map" id="runMap" aria-label="Run map"></div>
+
+        <section class="battlefield" id="battlefield" aria-live="polite">
+          <div class="combatant player-card">
+            <p class="combatant-kicker">You</p>
+            <div class="avatar avatar-player" aria-hidden="true">◇</div>
+            <p class="combatant-name">Signal Runner</p>
+            <div class="hp-track" aria-label="Player HP"><span id="playerHpBar"></span></div>
+            <p class="hp-text" id="playerHpText">HP 100</p>
+          </div>
+
+          <div class="combat-center" aria-hidden="true">
+            <div class="signal-beam" id="signalBeam"></div>
+            <p class="combo-chip" id="comboText">Combo ×0</p>
+          </div>
+
+          <div class="combatant enemy-card">
+            <p class="combatant-kicker" id="enemyKicker">Boss</p>
+            <div class="avatar avatar-enemy" id="enemyAvatar" aria-hidden="true">◈</div>
+            <p class="combatant-name" id="enemyName">Claim Hydra</p>
+            <div class="hp-track boss" aria-label="Boss HP"><span id="bossHpBar"></span></div>
+            <p class="hp-text" id="bossHpText">Threat 100</p>
+          </div>
+        </section>
+
+        <div class="combat-log" id="combatLog">Mission entering arena…</div>
+
         <article class="question-card" id="questionCard">
-          <p class="question-tag" id="questionTag"></p>
+          <div class="encounter-topline">
+            <p class="question-tag" id="questionTag"></p>
+            <p class="threat-pill" id="threatPill"></p>
+          </div>
           <h2 class="question-stem" id="questionStem"></h2>
+          <p class="encounter-brief" id="encounterBrief"></p>
           <div class="choices" id="choices" role="list"></div>
         </article>
+
         <div class="feedback" id="feedback" hidden>
           <p class="feedback-verdict" id="feedbackVerdict"></p>
           <p class="feedback-body" id="feedbackBody"></p>
-          <button type="button" class="primary-btn" id="btnNext">Continue</button>
+          <p class="source-line" id="sourceLine"></p>
+          <button type="button" class="primary-btn" id="btnNext">Advance</button>
         </div>
       </section>
 
@@ -59,16 +96,15 @@
           <h2 class="summary-title" id="summaryTitle"></h2>
           <p class="summary-score" id="summaryScore"></p>
         </div>
-        <div class="mastery-meter">
-          <div class="mastery-fill" id="masteryFill"></div>
-        </div>
+        <div class="mastery-meter"><div class="mastery-fill" id="masteryFill"></div></div>
         <p class="summary-reward" id="summaryReward"></p>
+        <div class="result-grid" id="resultGrid"></div>
         <ul class="summary-tags" id="summaryTags"></ul>
-        <button type="button" class="primary-btn" id="btnReplay">Play again</button>
-        <button type="button" class="ghost-btn block" id="btnHome">Back to decks</button>
+        <button type="button" class="primary-btn" id="btnReplay">Run it again</button>
+        <button type="button" class="ghost-btn block" id="btnHome">Back to missions</button>
       </section>
     </main>
   </div>
-  <script src="src/app.js?v=20260706a" type="module"></script>
+  <script src="src/app.js?v=20260706b" type="module"></script>
 </body>
 </html>
