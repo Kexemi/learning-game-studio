@@ -3,108 +3,114 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#080d14" />
-  <title>Mechanism Run — Learn by playing</title>
-  <link rel="stylesheet" href="src/styles.css?v=20260706b" />
+  <meta name="theme-color" content="#060914" />
+  <title>Mechanism Run — Story on wheels</title>
+  <link rel="stylesheet" href="src/styles.css?v=20260706c" />
 </head>
 <body>
-  <div id="app" class="app-shell" data-screen="home">
-    <header class="topbar">
-      <div class="brand">
-        <span class="brand-mark" aria-hidden="true">◆</span>
-        <div>
-          <p class="brand-kicker">Learning game</p>
-          <h1 class="brand-title">Mechanism Run</h1>
-        </div>
-      </div>
-      <div class="streak-pill" id="streakPill" hidden>
-        <span id="streakLabel">0 cleared</span>
-      </div>
-    </header>
+  <div id="app" class="story-app" data-screen="home">
+    <main class="story-shell">
+      <section class="screen screen-active home-scene" data-view="home" id="viewHome">
+        <div class="storybook-stage home-stage" id="homeStage" aria-label="Animated story stage">
+          <div class="moon" aria-hidden="true"></div>
+          <div class="starfield" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="cloud cloud-a" aria-hidden="true"></div>
+          <div class="cloud cloud-b" aria-hidden="true"></div>
 
-    <main class="stage">
-      <section class="screen screen-active" data-view="home" id="viewHome">
-        <div class="hero-panel">
-          <div class="orbital-rings" aria-hidden="true">
-            <span></span><span></span><span></span>
+          <div class="title-card">
+            <p class="eyebrow">Mechanism Run</p>
+            <h1>Ride the source. Beat the claim.</h1>
+            <p class="story-copy">A short animated run where each question is a scene, each answer steers the ride, and the mechanism becomes the way out.</p>
           </div>
-          <p class="hero-kicker">Run decks as missions</p>
-          <h2>Beat the boss by proving the mechanism.</h2>
-          <p class="lede">Each source becomes a short combat run: scout the claim, choose the move that survives pressure, protect your HP, build combo, and unlock the mechanism badge.</p>
+
+          <div class="rail-window" aria-hidden="true">
+            <div class="rolling-hills hills-back"></div>
+            <div class="rolling-hills hills-front"></div>
+            <div class="track-line"></div>
+            <div class="story-train intro-train">
+              <span class="engine-light"></span>
+              <span class="wheel w1"></span>
+              <span class="wheel w2"></span>
+              <span class="wheel w3"></span>
+            </div>
+          </div>
         </div>
-        <div id="deckList" class="deck-list" role="list"></div>
-        <p class="hint" id="loadHint">Loading missions…</p>
+
+        <div class="ticket-dock" id="deckList" role="list" aria-label="Choose a story run"></div>
+        <p class="load-hint" id="loadHint">Loading story runs…</p>
       </section>
 
-      <section class="screen" data-view="run" id="viewRun" hidden>
-        <div class="run-header">
-          <button type="button" class="ghost-btn compact" id="btnExitRun" aria-label="Exit run">← Missions</button>
-          <div class="run-meta">
-            <p class="run-arena" id="runArena"></p>
-            <p class="run-title" id="runTitle"></p>
+      <section class="screen run-scene" data-view="run" id="viewRun" hidden>
+        <header class="cinema-bar">
+          <button type="button" class="back-chip" id="btnExitRun" aria-label="Exit run">‹ tickets</button>
+          <div class="chapter-label">
+            <span id="runArena">Story rail</span>
+            <strong id="runTitle">Run</strong>
           </div>
-        </div>
+          <div class="meter-cluster" aria-label="Run meters">
+            <span id="playerHpText">♥ 100</span>
+            <span id="bossHpText">Threat 100</span>
+          </div>
+        </header>
 
-        <div class="run-map" id="runMap" aria-label="Run map"></div>
+        <div class="story-progress" id="runMap" aria-label="Story scene progress"></div>
 
-        <section class="battlefield" id="battlefield" aria-live="polite">
-          <div class="combatant player-card">
-            <p class="combatant-kicker">You</p>
-            <div class="avatar avatar-player" aria-hidden="true">◇</div>
-            <p class="combatant-name">Signal Runner</p>
-            <div class="hp-track" aria-label="Player HP"><span id="playerHpBar"></span></div>
-            <p class="hp-text" id="playerHpText">HP 100</p>
+        <section class="story-stage" id="storyStage" data-mood="ready" aria-live="polite">
+          <div class="stage-sky" aria-hidden="true">
+            <span class="spark s1"></span><span class="spark s2"></span><span class="spark s3"></span>
+          </div>
+          <div class="rolling-backdrop" aria-hidden="true"></div>
+          <div class="story-road" aria-hidden="true"></div>
+
+          <div class="villain-puppet" id="enemyPuppet" aria-hidden="true">
+            <span class="puppet-face" id="enemyAvatar">◈</span>
+            <span class="puppet-shadow"></span>
           </div>
 
-          <div class="combat-center" aria-hidden="true">
-            <div class="signal-beam" id="signalBeam"></div>
-            <p class="combo-chip" id="comboText">Combo ×0</p>
+          <div class="rider" aria-hidden="true">
+            <span class="rider-head"></span>
+            <span class="rider-body"></span>
+            <span class="traveler-wheel"></span>
           </div>
 
-          <div class="combatant enemy-card">
-            <p class="combatant-kicker" id="enemyKicker">Boss</p>
-            <div class="avatar avatar-enemy" id="enemyAvatar" aria-hidden="true">◈</div>
-            <p class="combatant-name" id="enemyName">Claim Hydra</p>
-            <div class="hp-track boss" aria-label="Boss HP"><span id="bossHpBar"></span></div>
-            <p class="hp-text" id="bossHpText">Threat 100</p>
-          </div>
+          <article class="scene-card" id="sceneCard">
+            <div class="scene-topline">
+              <p class="scene-counter" id="storyCounter">Scene 1</p>
+              <p class="combo-badge" id="comboText">wheel x0</p>
+            </div>
+            <p class="narrator-bubble" id="narratorLine">The rail is waking up.</p>
+            <h2 id="questionStem">Loading scene…</h2>
+            <p class="enemy-line" id="enemyName">Claim ghost</p>
+            <p class="threat-line" id="threatPill">hit 10</p>
+          </article>
         </section>
 
-        <div class="combat-log" id="combatLog">Mission entering arena…</div>
+        <div class="choice-wheel" id="choices" role="list" aria-label="Choose how to steer the scene"></div>
 
-        <article class="question-card" id="questionCard">
-          <div class="encounter-topline">
-            <p class="question-tag" id="questionTag"></p>
-            <p class="threat-pill" id="threatPill"></p>
-          </div>
-          <h2 class="question-stem" id="questionStem"></h2>
-          <p class="encounter-brief" id="encounterBrief"></p>
-          <div class="choices" id="choices" role="list"></div>
-        </article>
-
-        <div class="feedback" id="feedback" hidden>
-          <p class="feedback-verdict" id="feedbackVerdict"></p>
-          <p class="feedback-body" id="feedbackBody"></p>
+        <div class="result-ribbon" id="feedback" hidden>
+          <p class="result-verdict" id="feedbackVerdict"></p>
+          <p class="result-copy" id="feedbackBody"></p>
           <p class="source-line" id="sourceLine"></p>
-          <button type="button" class="primary-btn" id="btnNext">Advance</button>
+          <button type="button" class="roll-button" id="btnNext">Roll onward</button>
         </div>
       </section>
 
-      <section class="screen" data-view="summary" id="viewSummary" hidden>
-        <div class="summary-hero">
-          <p class="summary-kicker">Run complete</p>
-          <h2 class="summary-title" id="summaryTitle"></h2>
-          <p class="summary-score" id="summaryScore"></p>
+      <section class="screen ending-scene" data-view="summary" id="viewSummary" hidden>
+        <div class="ending-stage">
+          <div class="ending-wheel" aria-hidden="true"></div>
+          <p class="eyebrow">Story complete</p>
+          <h2 id="summaryTitle">The rail quiets.</h2>
+          <p class="ending-score" id="summaryScore"></p>
+          <div class="mastery-meter"><span id="masteryFill"></span></div>
+          <p class="summary-reward" id="summaryReward"></p>
         </div>
-        <div class="mastery-meter"><div class="mastery-fill" id="masteryFill"></div></div>
-        <p class="summary-reward" id="summaryReward"></p>
         <div class="result-grid" id="resultGrid"></div>
         <ul class="summary-tags" id="summaryTags"></ul>
-        <button type="button" class="primary-btn" id="btnReplay">Run it again</button>
-        <button type="button" class="ghost-btn block" id="btnHome">Back to missions</button>
+        <button type="button" class="roll-button" id="btnReplay">Ride it again</button>
+        <button type="button" class="back-chip block" id="btnHome">Back to tickets</button>
       </section>
     </main>
   </div>
-  <script src="src/app.js?v=20260706b" type="module"></script>
+  <script src="src/app.js?v=20260706c" type="module"></script>
 </body>
 </html>

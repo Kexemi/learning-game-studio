@@ -19,7 +19,7 @@ Localhost/LAN links are not valid Telegram handoffs; use GitHub Pages for owner 
 
 ## Game loop
 
-This is not a flashcard viewer. A deck runs as a compact mission: map nodes, player HP, boss/threat HP, enemy encounters, combo, combat log, move-framed choices, and a ranked reward summary.
+This is not a flashcard viewer or web-page game. A deck runs as an animated story on wheels: story tickets, rolling rail scenery, a rider wheel, scene narration, villain puppets, steering choices, threat/heart state, and an ending/reward screen.
 
 ## Verify
 

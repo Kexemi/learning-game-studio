@@ -1,7 +1,7 @@
 /**
- * Headless smoke: verify this is a playable game loop, not just static flashcards.
- * Starts a local server, drives Chrome through CDP with no npm dependencies,
- * captures a phone screenshot, and asserts HP/boss/combo/map state changes.
+ * Headless smoke: verify the game feels like an animated story on wheels,
+ * not a web-page/card quiz. Starts a local server, drives system Chrome via CDP,
+ * captures a short-phone screenshot, and checks story-stage mechanics.
  */
 import http from "node:http";
 import { spawn } from "node:child_process";
@@ -15,7 +15,7 @@ const REPO = path.resolve(ROOT, "..");
 const PORT = Number(process.env.LGS_PORT || 8765);
 const DEBUG_PORT = Number(process.env.LGS_DEBUG_PORT || 9227);
 const BASE = `http://127.0.0.1:${PORT}`;
-const ARTIFACT_DIR = path.join(REPO, "artifacts", "learning-game-v2");
+const ARTIFACT_DIR = path.join(REPO, "artifacts", "learning-game-v3");
 const CHROME_PATHS = [
   "C:/Program Files/Google/Chrome/Application/chrome.exe",
   "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe",
@@ -83,14 +83,8 @@ async function connect(wsUrl) {
 }
 
 async function evalExpr(cdp, expression) {
-  const result = await cdp.send("Runtime.evaluate", {
-    expression,
-    awaitPromise: true,
-    returnByValue: true,
-  });
-  if (result.exceptionDetails) {
-    throw new Error(result.exceptionDetails.text || "Runtime.evaluate exception");
-  }
+  const result = await cdp.send("Runtime.evaluate", { expression, awaitPromise: true, returnByValue: true });
+  if (result.exceptionDetails) throw new Error(result.exceptionDetails.text || "Runtime exception");
   return result.result?.value;
 }
 
@@ -107,22 +101,23 @@ async function waitForExpr(cdp, expression, ms = 10000) {
 async function runStaticContract() {
   const [manifest, appJs, html, css] = await Promise.all([
     fetch(`${BASE}/content/pack-manifest.json`).then((r) => r.text()),
-    fetch(`${BASE}/src/app.js?v=20260706b`).then((r) => r.text()),
+    fetch(`${BASE}/src/app.js?v=20260706c`).then((r) => r.text()),
     fetch(`${BASE}/index.html`).then((r) => r.text()),
-    fetch(`${BASE}/src/styles.css?v=20260706b`).then((r) => r.text()),
+    fetch(`${BASE}/src/styles.css?v=20260706c`).then((r) => r.text()),
   ]);
   const required = [
     [manifest, "nvidiaai-llm-memorization-capacity-20260706", "manifest contains current deck"],
-    [html, "battlefield", "battlefield present"],
-    [html, "runMap", "run map present"],
-    [html, "playerHpBar", "player HP present"],
-    [html, "bossHpBar", "boss HP present"],
-    [appJs, "bossHp", "boss HP mechanic present"],
-    [appJs, "combo", "combo mechanic present"],
-    [appJs, "buildEncounters", "encounter generator present"],
+    [html, "story-stage", "story stage present"],
+    [html, "traveler-wheel", "traveler wheel present"],
+    [html, "ticket-dock", "ticket dock present"],
+    [html, "narrator-bubble", "narrator bubble present"],
+    [appJs, "story-ticket", "story ticket renderer present"],
+    [appJs, "buildScenes", "scene builder present"],
+    [appJs, "story-on-wheels", "story-on-wheels marker absent"],
     [appJs, "__MECHANISM_RUN_DEBUG__", "debug snapshot exposed"],
-    [css, ".battlefield", "battle CSS present"],
-    [css, ".map-node", "map CSS present"],
+    [css, "@keyframes wheelSpin", "wheel animation present"],
+    [css, ".story-stage", "story-stage CSS present"],
+    [css, ".story-ticket", "ticket CSS present"],
   ];
   for (const [haystack, needle, label] of required) {
     if (!haystack.includes(needle)) throw new Error(`static contract failed: ${label}`);
@@ -130,11 +125,7 @@ async function runStaticContract() {
 }
 
 async function runSmoke() {
-  const server = spawn("python", ["-m", "http.server", String(PORT), "--bind", "127.0.0.1"], {
-    cwd: REPO,
-    stdio: "ignore",
-    shell: false,
-  });
+  const server = spawn("python", ["-m", "http.server", String(PORT), "--bind", "127.0.0.1"], { cwd: REPO, stdio: "ignore", shell: false });
   let chromeProc = null;
   let userDataDir = null;
   let cdp = null;
@@ -144,7 +135,7 @@ async function runSmoke() {
 
     const chrome = CHROME_PATHS.find((p) => existsSync(p));
     if (!chrome || typeof WebSocket === "undefined") {
-      console.log("LEARNING_GAME_SMOKE_PASS static-contract");
+      console.log("LEARNING_GAME_SMOKE_PASS static-story-contract");
       return;
     }
 
@@ -165,50 +156,50 @@ async function runSmoke() {
     cdp = await connect(page.webSocketDebuggerUrl);
     await cdp.send("Page.enable");
     await cdp.send("Runtime.enable");
-    await cdp.send("Emulation.setDeviceMetricsOverride", {
-      width: 390,
-      height: 665,
-      deviceScaleFactor: 2,
-      mobile: true,
-    });
+    await cdp.send("Emulation.setDeviceMetricsOverride", { width: 390, height: 665, deviceScaleFactor: 2, mobile: true });
     await cdp.send("Page.navigate", { url: `${BASE}/index.html` });
     await waitForExpr(cdp, "document.readyState === 'complete'");
-    await waitForExpr(cdp, "document.querySelectorAll('.deck-card').length >= 1");
+    await waitForExpr(cdp, "document.querySelectorAll('.story-ticket').length >= 1");
 
-    await evalExpr(cdp, "document.querySelector('.deck-card').click(); true");
-    await waitForExpr(cdp, "document.querySelector('.battlefield') && document.querySelectorAll('.choice-btn').length >= 2");
+    await evalExpr(cdp, "document.querySelector('.story-ticket').click(); true");
+    await waitForExpr(cdp, "document.querySelector('.story-stage') && document.querySelectorAll('.steer-choice').length >= 2");
     const before = await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot()");
-    if (before.screen !== "run" || before.hp !== 100 || before.bossHp <= 0) throw new Error(`bad initial snapshot ${JSON.stringify(before)}`);
-    await evalExpr(cdp, "document.querySelector('.choice-btn').click(); true");
+    if (before.screen !== "run" || before.hp !== 100 || !before.hasWheel || !before.hasStoryStage) throw new Error(`bad initial story snapshot ${JSON.stringify(before)}`);
+
+    await evalExpr(cdp, "document.querySelector('.steer-choice').click(); true");
     await waitForExpr(cdp, "!document.getElementById('feedback').hidden");
     const after = await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot()");
-    if (after.answers !== 1 || !after.awaitingAdvance) throw new Error(`answer did not advance combat state ${JSON.stringify(after)}`);
+    if (after.answers !== 1 || !after.answered) throw new Error(`answer did not resolve story scene ${JSON.stringify(after)}`);
+
     const mechanics = await evalExpr(cdp, `({
-      hasBattlefield: !!document.querySelector('.battlefield'),
-      mapNodes: document.querySelectorAll('.map-node').length,
-      feedback: document.getElementById('feedbackVerdict').textContent,
-      bossText: document.getElementById('bossHpText').textContent,
-      comboText: document.getElementById('comboText').textContent,
-      sourceLine: document.getElementById('sourceLine').textContent,
+      tickets: document.querySelectorAll('.story-ticket').length,
+      nodes: document.querySelectorAll('.story-node').length,
+      wheel: !!document.querySelector('.traveler-wheel'),
+      puppet: !!document.querySelector('.villain-puppet'),
+      narrator: document.getElementById('narratorLine').textContent,
+      result: document.getElementById('feedbackVerdict').textContent,
       overflowX: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      stageHeight: Math.round(document.querySelector('.story-stage').getBoundingClientRect().height),
     })`);
-    if (!mechanics.hasBattlefield || mechanics.mapNodes < 3 || !mechanics.feedback || !mechanics.sourceLine.includes('Source anchor')) {
-      throw new Error(`mechanic DOM contract failed ${JSON.stringify(mechanics)}`);
+    if (mechanics.tickets < 1 || mechanics.nodes < 3 || !mechanics.wheel || !mechanics.puppet || !mechanics.narrator || !mechanics.result) {
+      throw new Error(`story mechanics contract failed ${JSON.stringify(mechanics)}`);
     }
     if (mechanics.overflowX > 1) throw new Error(`horizontal overflow ${mechanics.overflowX}`);
+    if (mechanics.stageHeight < 320) throw new Error(`story stage too small ${mechanics.stageHeight}`);
 
     mkdirSync(ARTIFACT_DIR, { recursive: true });
     const shot = await cdp.send("Page.captureScreenshot", { format: "png", captureBeyondViewport: false });
-    writeFileSync(path.join(ARTIFACT_DIR, "phone-battle.png"), Buffer.from(shot.data, "base64"));
-    console.log("LEARNING_GAME_SMOKE_PASS browser-game-loop");
-    console.log(`LEARNING_GAME_SCREENSHOT ${path.join(ARTIFACT_DIR, "phone-battle.png")}`);
+    const screenshot = path.join(ARTIFACT_DIR, "phone-story-wheel.png");
+    writeFileSync(screenshot, Buffer.from(shot.data, "base64"));
+    console.log("LEARNING_GAME_SMOKE_PASS story-on-wheels");
+    console.log(`LEARNING_GAME_SCREENSHOT ${screenshot}`);
   } finally {
     if (cdp) cdp.close();
     if (chromeProc) chromeProc.kill("SIGTERM");
     if (server) server.kill("SIGTERM");
     if (userDataDir) {
       try { rmSync(userDataDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 }); }
-      catch { /* Windows can keep Chrome profile sqlite files locked briefly after SIGTERM; do not fail a passed smoke. */ }
+      catch { /* Windows can hold Chrome sqlite files briefly after SIGTERM; do not fail a passed smoke. */ }
     }
   }
 }
