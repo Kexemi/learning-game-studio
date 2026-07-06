@@ -15,7 +15,7 @@ const REPO = path.resolve(ROOT, "..");
 const PORT = Number(process.env.LGS_PORT || 8787);
 const DEBUG_PORT = Number(process.env.LGS_DEBUG_PORT || 9232);
 const BASE = `http://127.0.0.1:${PORT}`;
-const ARTIFACT_DIR = path.join(REPO, "artifacts", "learning-game-v5");
+const ARTIFACT_DIR = path.join(REPO, "artifacts", "learning-game-v6");
 const CHROME_PATHS = [
   "C:/Program Files/Google/Chrome/Application/chrome.exe",
   "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe",
@@ -105,9 +105,9 @@ async function fetchText(url) {
 async function runStaticContract() {
   const [manifest, appJs, html, css] = await Promise.all([
     fetchText(`${BASE}/content/pack-manifest.json`),
-    fetchText(`${BASE}/src/app.js?v=20260706e`),
+    fetchText(`${BASE}/src/app.js?v=20260706f`),
     fetchText(`${BASE}/index.html`),
-    fetchText(`${BASE}/src/styles.css?v=20260706e`),
+    fetchText(`${BASE}/src/styles.css?v=20260706f`),
   ]);
   const required = [
     [manifest, "nvidiaai-llm-memorization-capacity-20260706", "manifest contains current deck"],
@@ -117,9 +117,9 @@ async function runStaticContract() {
     [html, "focus-beam", "focus beam exists"],
     [html, "settle-gate", "settle gate exists"],
     [html, "decision-rack", "decision rack exists"],
-    [html, "src/app.js?v=20260706e", "v5 JS cache marker"],
-    [html, "src/styles.css?v=20260706e", "v5 CSS cache marker"],
-    [appJs, "fifty-loop-director-v5", "v5 marker"],
+    [html, "src/app.js?v=20260706f", "v6 JS cache marker"],
+    [html, "src/styles.css?v=20260706f", "v6 CSS cache marker"],
+    [appJs, "visual-selfplay-50-v6", "v6 marker"],
     [appJs, "forceHomeSettled", "home gate hook"],
     [appJs, "forceSceneSettled", "scene gate hook"],
     [appJs, "button.disabled = true", "input disabled outside settle"],
@@ -149,7 +149,7 @@ async function runSmoke() {
     await runStaticContract();
     const chrome = CHROME_PATHS.find((p) => existsSync(p));
     if (!chrome || typeof WebSocket === "undefined") {
-      console.log("FIFTY_LOOP_DIRECTOR_V5_PASS static-contract");
+      console.log("VISUAL_SELFPLAY_50_V6_PASS static-contract");
       return;
     }
     userDataDir = mkdtempSync(path.join(tmpdir(), "lgs-chrome-"));
@@ -175,7 +175,7 @@ async function runSmoke() {
     await waitForExpr(cdp, "window.__MECHANISM_RUN_DEBUG__ && document.querySelectorAll('.ride-capsule').length >= 1");
 
     const opening = await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot()");
-    if (opening.marker !== "fifty-loop-director-v5" || opening.screen !== "home" || opening.homePhase !== "intro" || opening.bodyOverflow !== "hidden") {
+    if (opening.marker !== "visual-selfplay-50-v6" || opening.screen !== "home" || opening.homePhase !== "intro" || opening.bodyOverflow !== "hidden") {
       throw new Error(`opening is not a fixed cinematic stage ${JSON.stringify(opening)}`);
     }
     const openingShot = await screenshot(cdp, "phone-opening-camera.png");
@@ -225,7 +225,7 @@ async function runSmoke() {
     }
     const outcomeShot = await screenshot(cdp, "phone-outcome-scroll.png");
 
-    console.log("FIFTY_LOOP_DIRECTOR_V5_PASS continuous-guided-experience");
+    console.log("VISUAL_SELFPLAY_50_V6_PASS continuous-guided-experience");
     console.log(`FIFTY_LOOP_SCREENSHOT_OPENING ${openingShot}`);
     console.log(`FIFTY_LOOP_SCREENSHOT_TRAVEL ${travelShot}`);
     console.log(`FIFTY_LOOP_SCREENSHOT_SETTLED ${settledShot}`);
@@ -242,6 +242,6 @@ async function runSmoke() {
 }
 
 runSmoke().catch((err) => {
-  console.error("FIFTY_LOOP_DIRECTOR_V5_FAIL", err.message);
+  console.error("VISUAL_SELFPLAY_50_V6_FAIL", err.message);
   process.exit(1);
 });

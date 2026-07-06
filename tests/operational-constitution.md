@@ -16,22 +16,27 @@ Owner correction: v4 was not enough. The bar is roughly “50 more loops”: fro
 | Scene rhythm | Each learning prompt moves through travel/reveal/settled/outcome phases. |
 | Consequence first | Answer changes stage result before explanation/source text appears. |
 | Regression bans | Old shell terms/classes (`story-stage`, `story-ticket`, `ticket-dock`, `narrator-bubble`) are absent. |
-| Phone proof | `390x665` smoke captures opening, travel, settled levers, and outcome under `artifacts/learning-game-v5/`. |
+| Phone proof | `390x665` smoke captures opening, travel, settled levers, and outcome under `artifacts/learning-game-v6/`. |
+| Literal 50 loops | `scripts/visual_self_play_50.mjs` drives 50 phone-browser rounds, each with its own big-picture goal and screenshot. |
+| Loop analysis | `scripts/analyze_visual_self_play.py` scores the screenshots and writes a ledger/contact sheet under `artifacts/learning-game-v6/visual-self-play-50/`. |
 
 Command bundle:
 
 ```bash
 python scripts/audit_question_pack.py --strict
 node tests/learning_game_smoke.mjs
+node scripts/visual_self_play_50.mjs
+python scripts/analyze_visual_self_play.py
 ```
 
 Expected stdout includes:
 
 ```text
 AUDIT PASS
-FIFTY_LOOP_DIRECTOR_V5_PASS continuous-guided-experience
-FIFTY_LOOP_SCREENSHOT_OPENING .../artifacts/learning-game-v5/phone-opening-camera.png
-FIFTY_LOOP_SCREENSHOT_TRAVEL .../artifacts/learning-game-v5/phone-travel-locked.png
-FIFTY_LOOP_SCREENSHOT_SETTLED .../artifacts/learning-game-v5/phone-settled-levers.png
-FIFTY_LOOP_SCREENSHOT_OUTCOME .../artifacts/learning-game-v5/phone-outcome-scroll.png
+VISUAL_SELFPLAY_50_V6_PASS continuous-guided-experience
+FIFTY_LOOP_SCREENSHOT_OPENING .../artifacts/learning-game-v6/phone-opening-camera.png
+FIFTY_LOOP_SCREENSHOT_TRAVEL .../artifacts/learning-game-v6/phone-travel-locked.png
+FIFTY_LOOP_SCREENSHOT_SETTLED .../artifacts/learning-game-v6/phone-settled-levers.png
+VISUAL_SELF_PLAY_CAPTURE_PASS 50
+VISUAL_SELF_PLAY_ANALYSIS_PASS 50
 ```

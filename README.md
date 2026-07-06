@@ -19,13 +19,15 @@ Localhost/LAN links are not valid Telegram handoffs; use GitHub Pages for owner 
 
 ## Experience loop
 
-This is not a flashcard viewer, web-page game, or static card loop. V5 follows a 50-loop director standard: from first paint, the player is inside a moving idea-machine. The opening is cinematic, boarding is gated until the guide settles, questions travel/reveal before input, steering levers stay disabled until the quiet interaction window, and explanations appear only after the animated consequence.
+This is not a flashcard viewer, web-page game, or static card loop. V6 adds a literal 50-round visual self-play lane: Hermes drives phone-browser playtests, sets one big-picture goal per round, captures screenshots, scores the experience, and then applies the strongest findings. The current shell is a fixed-stage ride: opening motion, gated boarding, travel/reveal before input, levers disabled until settle, and explanation only after consequence.
 
 ## Verify
 
 ```bash
 python scripts/audit_question_pack.py --strict
 node tests/learning_game_smoke.mjs
+node scripts/visual_self_play_50.mjs
+python scripts/analyze_visual_self_play.py
 ```
 
 ## Content

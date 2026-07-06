@@ -1,5 +1,5 @@
-const STORAGE_KEY = "mechanism-run-v5";
-const EXPERIENCE_MARKER = "fifty-loop-director-v5";
+const STORAGE_KEY = "mechanism-run-v6";
+const EXPERIENCE_MARKER = "visual-selfplay-50-v6";
 const TIMING = { opening: 1450, approach: 780, reveal: 620, outcome: 380 };
 
 const els = {
@@ -93,6 +93,7 @@ function setHomePhase(phase) {
   els.app.dataset.homePhase = phase;
   const ready = phase === "board";
   els.boardButton.disabled = !ready || !state.activePackId;
+  document.querySelectorAll(".ride-capsule").forEach((button) => { button.disabled = !ready; });
   if (phase === "intro") {
     els.homeGuideLine.textContent = "The camera is opening. Let the source become a ride.";
     els.boardingTitle.textContent = "Wait for the guide…";
@@ -142,6 +143,7 @@ function renderDeckList() {
       <strong>${escapeHtml(entry.title || pack?.title || entry.pack_id)}</strong>
       <small>${pack?.questions?.length || 0} scenes${best ? ` · best ${best.rank}` : ""}</small>
     `;
+    capsule.disabled = els.app.dataset.homePhase !== "board";
     capsule.addEventListener("click", () => {
       state.activePackId = entry.pack_id;
       renderDeckList();

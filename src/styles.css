@@ -69,6 +69,7 @@ button { font: inherit; }
 .capsule-rail { display: flex; gap: 9px; min-height: 112px; overflow-x: auto; padding: 1px 1px 8px; scroll-snap-type: x mandatory; }
 .capsule-rail::-webkit-scrollbar { display: none; }
 .ride-capsule { position: relative; flex: 0 0 84%; min-height: 100px; scroll-snap-align: center; border: 1px solid rgba(255,255,255,.15); border-radius: 999px 28px 28px 999px; padding: 15px 18px 14px 58px; text-align: left; color: var(--ink); background: linear-gradient(135deg,rgba(255,255,255,.13),rgba(255,255,255,.045)); box-shadow: 0 14px 42px rgba(0,0,0,.32); overflow: hidden; animation: capsuleBreathe 1.8s ease-in-out infinite alternate; animation-delay: var(--delay); }
+.ride-capsule:disabled { opacity: .45; filter: saturate(.7); }
 .ride-capsule[data-active="true"] { border-color: rgba(255,209,102,.74); background: linear-gradient(135deg,rgba(255,209,102,.22),rgba(102,242,213,.08)); }
 .capsule-light { position: absolute; left: 14px; top: 50%; width: 30px; height: 30px; border-radius: 50%; transform: translateY(-50%); background: var(--gold); box-shadow: 0 0 28px rgba(255,209,102,.6); }
 .capsule-route { display: block; color: var(--gold); text-transform: uppercase; letter-spacing: .12em; font-size: 9px; font-weight: 950; margin-bottom: 5px; }
@@ -91,4 +92,131 @@ button { font: inherit; }
 .settle-gate{border:1px solid var(--line);border-radius:26px;min-height:164px;padding:10px;background:rgba(255,247,232,.07);box-shadow:0 16px 46px rgba(0,0,0,.34);transition:opacity .35s ease,transform .35s ease}.settle-gate[data-open="false"]{opacity:.5;transform:translateY(5px)}.cue-line{margin:0 0 8px;color:var(--gold);font-size:12px;font-weight:950;text-align:center}.decision-rack{display:grid;grid-template-columns:1fr 1fr;gap:7px}.steer-lever{min-height:60px;border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:9px 10px;color:var(--ink);text-align:left;background:linear-gradient(180deg,rgba(255,255,255,.11),rgba(255,255,255,.045));box-shadow:0 10px 28px rgba(0,0,0,.26)}.steer-lever:disabled{opacity:.42}.steer-lever span{display:block;color:var(--gold);font-size:9px;text-transform:uppercase;letter-spacing:.1em;font-weight:950;margin-bottom:4px}.steer-lever strong{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-size:12px;line-height:1.18;font-weight:780}.steer-lever.is-correct{border-color:rgba(128,237,153,.78);background:rgba(128,237,153,.15)}.steer-lever.is-wrong{border-color:rgba(255,107,136,.78);background:rgba(255,107,136,.14)}.settle-gate[data-open="true"]{animation:readyGlow 1s ease-in-out infinite alternate}@keyframes readyGlow{to{box-shadow:0 0 0 1px rgba(255,209,102,.28),0 18px 58px rgba(0,0,0,.38)}}
 .outcome-panel{position:absolute;left:10px;right:10px;bottom:10px;z-index:12;border:1px solid var(--line);border-radius:24px;padding:14px;background:rgba(7,9,18,.9);box-shadow:var(--shadow);backdrop-filter:blur(14px)}.result-verdict{margin:0 0 7px;color:var(--gold);font-weight:950}.result-copy,.source-line{margin:0 0 10px;color:var(--muted);font-size:13px;line-height:1.36}.source-line{font-size:11px;opacity:.82}
 .ending-stage{padding:24px 20px}.arrival-wheel{position:absolute;right:-36px;top:34px;width:170px;height:170px;border-radius:50%;border:24px solid rgba(255,209,102,.22);background:conic-gradient(var(--gold),var(--teal),var(--rose),var(--gold));animation:wheelSpin 4s linear infinite;opacity:.75}.ending-stage h2{position:relative;margin:9px 0;font-size:40px;line-height:.94;letter-spacing:-.05em}.ending-score,.summary-reward{position:relative;color:var(--muted);line-height:1.42}.mastery-meter{position:relative;height:12px;border-radius:999px;background:rgba(255,255,255,.1);overflow:hidden;margin:16px 0}.mastery-meter span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--gold));transition:width .5s ease}.arrival-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.arrival-stats div{border:1px solid var(--line);border-radius:18px;text-align:center;padding:9px 7px;background:rgba(255,255,255,.07)}.arrival-stats span{display:block;color:var(--gold);font-size:23px;font-weight:950}.arrival-stats small{color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.1em;font-weight:900}.summary-tags{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:5px;max-height:58px;overflow:hidden}.summary-tags li{padding:4px 7px;border-radius:999px;background:rgba(255,255,255,.08);color:var(--muted);border:1px solid rgba(255,255,255,.12);font-size:11px}
-@media (max-width:390px){.director-frame{padding:6px}.experience-screen{height:calc(100svh - 12px);gap:6px}.stage-shell{border-radius:28px}.opening-lines{padding:22px 18px}.opening-lines h1{font-size:48px}.boarding-gate{grid-template-columns:1fr;min-height:128px}.board-button{width:100%}.ride-capsule{flex-basis:90%}.subtitle-track,.question-focus{padding:11px 12px}.settle-gate{min-height:158px}.steer-lever{min-height:58px}.wheel-rider{left:16px;transform:scale(.92);transform-origin:bottom left}.claim-spirit{right:16px;transform:scale(.92);transform-origin:bottom right}}
+/* V6 visual self-play finding: collapse separate web sections into one staged surface. */
+.director-app[data-version="visual-selfplay-50-v6"] .experience-screen[data-view="home"],
+.director-app[data-version="visual-selfplay-50-v6"] .experience-screen[data-view="run"] {
+  position: relative;
+  overflow: hidden;
+}
+.director-app[data-version="visual-selfplay-50-v6"] .home-stage {
+  position: absolute;
+  inset: 0;
+  flex: none;
+}
+.director-app[data-version="visual-selfplay-50-v6"] .boarding-gate {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 124px;
+  z-index: 12;
+  min-height: 102px;
+  background: rgba(5, 8, 20, .66);
+  backdrop-filter: blur(14px);
+}
+.director-app[data-version="visual-selfplay-50-v6"] .capsule-rail {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 8px;
+  z-index: 12;
+}
+.director-app[data-version="visual-selfplay-50-v6"] .load-hint {
+  position: absolute;
+  left: 18px;
+  bottom: 16px;
+  z-index: 13;
+}
+.director-app[data-version="visual-selfplay-50-v6"] .cockpit-topline {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 8px;
+  z-index: 20;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(5, 8, 20, .42);
+  backdrop-filter: blur(12px);
+}
+.director-app[data-version="visual-selfplay-50-v6"] .director-camera {
+  position: absolute;
+  inset: 0;
+  flex: none;
+}
+.director-app[data-version="visual-selfplay-50-v6"] .subtitle-track {
+  top: 64px;
+}
+.director-app[data-version="visual-selfplay-50-v6"] .question-focus {
+  bottom: 174px;
+  background: rgba(8, 10, 22, .68);
+}
+.director-app[data-version="visual-selfplay-50-v6"] .settle-gate {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 8px;
+  z-index: 18;
+  min-height: 132px;
+  background: rgba(5, 8, 20, .62);
+  backdrop-filter: blur(14px);
+}
+.director-app[data-version="visual-selfplay-50-v6"] .settle-gate[data-open="false"] {
+  opacity: 0;
+  transform: translateY(118%);
+  pointer-events: none;
+}
+.director-app[data-version="visual-selfplay-50-v6"] .outcome-panel {
+  background: rgba(5, 8, 20, .9);
+  max-height: 34svh;
+  overflow: hidden;
+}
+.director-app[data-version="visual-selfplay-50-v6"] .result-copy {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.director-app[data-version="visual-selfplay-50-v6"] .home-stage::before,
+.director-app[data-version="visual-selfplay-50-v6"] .director-camera::before {
+  content: "";
+  position: absolute;
+  inset: -24%;
+  z-index: 1;
+  pointer-events: none;
+  opacity: .45;
+  background:
+    repeating-linear-gradient(115deg, transparent 0 22px, rgba(255,255,255,.13) 22px 24px, transparent 24px 64px),
+    radial-gradient(circle at 22% 28%, rgba(102,242,213,.3), transparent 24%),
+    radial-gradient(circle at 78% 18%, rgba(255,209,102,.28), transparent 20%);
+  mix-blend-mode: screen;
+  animation: lensRush 3.4s linear infinite;
+}
+.director-app[data-version="visual-selfplay-50-v6"] .home-stage::after,
+.director-app[data-version="visual-selfplay-50-v6"] .director-camera::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 45%, transparent 0 28%, rgba(255,209,102,.16) 29%, transparent 31%),
+    linear-gradient(180deg, transparent 0 62%, rgba(255,107,136,.12) 100%);
+  animation: irisBreathe 1.8s ease-in-out infinite alternate;
+}
+.director-app[data-version="visual-selfplay-50-v6"] .opening-lines,
+.director-app[data-version="visual-selfplay-50-v6"] .moving-set,
+.director-app[data-version="visual-selfplay-50-v6"] .tunnel,
+.director-app[data-version="visual-selfplay-50-v6"] .guide-orb,
+.director-app[data-version="visual-selfplay-50-v6"] .motion-field,
+.director-app[data-version="visual-selfplay-50-v6"] .focus-beam,
+.director-app[data-version="visual-selfplay-50-v6"] .parallax-field,
+.director-app[data-version="visual-selfplay-50-v6"] .rail-stream,
+.director-app[data-version="visual-selfplay-50-v6"] .wheel-rider,
+.director-app[data-version="visual-selfplay-50-v6"] .claim-spirit,
+.director-app[data-version="visual-selfplay-50-v6"] .rail-lights,
+.director-app[data-version="visual-selfplay-50-v6"] .subtitle-track,
+.director-app[data-version="visual-selfplay-50-v6"] .question-focus {
+  z-index: 4;
+}
+@keyframes lensRush { to { transform: translate3d(-7%, 6%, 0) rotate(.5deg); } }
+@keyframes irisBreathe { to { opacity: .72; transform: scale(1.02); } }
+@media (max-width:390px){.director-frame{padding:6px}.experience-screen{height:calc(100svh - 12px);gap:6px}.stage-shell{border-radius:28px}.opening-lines{padding:22px 18px}.opening-lines h1{font-size:48px}.boarding-gate{grid-template-columns:1fr;min-height:128px}.board-button{width:100%}.ride-capsule{flex-basis:90%}.subtitle-track,.question-focus{padding:11px 12px}.settle-gate{min-height:158px}.steer-lever{min-height:58px}.wheel-rider{left:16px;transform:scale(.92);transform-origin:bottom left}.claim-spirit{right:16px;transform:scale(.92);transform-origin:bottom right}.director-app[data-version="visual-selfplay-50-v6"] .boarding-gate{bottom:118px;left:10px;right:10px;min-height:112px}.director-app[data-version="visual-selfplay-50-v6"] .capsule-rail{left:10px;right:10px}.director-app[data-version="visual-selfplay-50-v6"] .question-focus{bottom:170px}.director-app[data-version="visual-selfplay-50-v6"] .settle-gate{min-height:148px}}
