@@ -1,6 +1,7 @@
 /**
- * Headless smoke: the app must behave like a continuous directed animation.
- * It should move and guide from first paint, then settle only at interaction windows.
+ * V5 smoke: 50-loop director standard.
+ * The product must behave as a fixed, guided animated experience: opening motion,
+ * gated boarding, travel/reveal/settle phases, disabled inputs until settle, outcome before explanation.
  */
 import http from "node:http";
 import { spawn } from "node:child_process";
@@ -11,10 +12,10 @@ import path from "node:path";
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(ROOT, "..");
-const PORT = Number(process.env.LGS_PORT || 8786);
-const DEBUG_PORT = Number(process.env.LGS_DEBUG_PORT || 9231);
+const PORT = Number(process.env.LGS_PORT || 8787);
+const DEBUG_PORT = Number(process.env.LGS_DEBUG_PORT || 9232);
 const BASE = `http://127.0.0.1:${PORT}`;
-const ARTIFACT_DIR = path.join(REPO, "artifacts", "learning-game-v4");
+const ARTIFACT_DIR = path.join(REPO, "artifacts", "learning-game-v5");
 const CHROME_PATHS = [
   "C:/Program Files/Google/Chrome/Application/chrome.exe",
   "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe",
@@ -39,21 +40,16 @@ function waitForHttp(url, ms = 10000) {
     tick();
   });
 }
-
 function getJson(url) {
   return new Promise((resolve, reject) => {
     http.get(url, (res) => {
       let body = "";
       res.setEncoding("utf8");
       res.on("data", (chunk) => body += chunk);
-      res.on("end", () => {
-        try { resolve(JSON.parse(body)); }
-        catch (err) { reject(err); }
-      });
+      res.on("end", () => { try { resolve(JSON.parse(body)); } catch (err) { reject(err); } });
     }).on("error", reject);
   });
 }
-
 async function connect(wsUrl) {
   const ws = new WebSocket(wsUrl);
   await new Promise((resolve, reject) => {
@@ -80,13 +76,11 @@ async function connect(wsUrl) {
     close() { ws.close(); },
   };
 }
-
 async function evalExpr(cdp, expression) {
   const result = await cdp.send("Runtime.evaluate", { expression, awaitPromise: true, returnByValue: true });
   if (result.exceptionDetails) throw new Error(result.exceptionDetails.text || "Runtime exception");
   return result.result?.value;
 }
-
 async function waitForExpr(cdp, expression, ms = 10000) {
   const start = Date.now();
   while (Date.now() - start < ms) {
@@ -96,7 +90,6 @@ async function waitForExpr(cdp, expression, ms = 10000) {
   }
   throw new Error(`waitForExpr timeout: ${expression}`);
 }
-
 async function screenshot(cdp, name) {
   mkdirSync(ARTIFACT_DIR, { recursive: true });
   const shot = await cdp.send("Page.captureScreenshot", { format: "png", captureBeyondViewport: false });
@@ -104,46 +97,48 @@ async function screenshot(cdp, name) {
   writeFileSync(out, Buffer.from(shot.data, "base64"));
   return out;
 }
-
 async function fetchText(url) {
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error(`fetch ${url} ${res.status}`);
   return res.text();
 }
-
 async function runStaticContract() {
   const [manifest, appJs, html, css] = await Promise.all([
     fetchText(`${BASE}/content/pack-manifest.json`),
-    fetchText(`${BASE}/src/app.js?v=20260706d`),
+    fetchText(`${BASE}/src/app.js?v=20260706e`),
     fetchText(`${BASE}/index.html`),
-    fetchText(`${BASE}/src/styles.css?v=20260706d`),
+    fetchText(`${BASE}/src/styles.css?v=20260706e`),
   ]);
   const required = [
     [manifest, "nvidiaai-llm-memorization-capacity-20260706", "manifest contains current deck"],
-    [html, "opening-cinematic", "opening cinematic present"],
-    [html, "settle-panel", "settle panel present"],
-    [html, "ticket-rail", "ticket rail present"],
-    [html, "director-stage", "director stage present"],
-    [html, "interaction-window", "interaction window present"],
-    [html, "src/app.js?v=20260706d", "index points at v4 JS"],
-    [html, "src/styles.css?v=20260706d", "index points at v4 CSS"],
-    [appJs, "continuous-directed-animation", "directed-animation marker present"],
-    [appJs, "TIMING", "director timing present"],
-    [appJs, "forceHomeSettled", "home settle test hook present"],
-    [appJs, "forceSceneSettled", "scene settle test hook present"],
-    [appJs, "setRunPhase", "phase director present"],
-    [appJs, "button.disabled = true", "choices disabled outside interaction window"],
-    [css, "@keyframes curtainOpen", "opening curtain animation present"],
-    [css, "@keyframes trackRush", "track motion animation present"],
-    [css, ".director-stage[data-phase=\"travel\"]", "travel phase CSS present"],
-    [css, ".director-stage[data-phase=\"settled\"]", "settled phase CSS present"],
-    [css, ".interaction-window[data-ready=\"false\"]", "non-interaction window muted"],
+    [html, "camera-shutter", "camera shutter first-paint motion"],
+    [html, "boarding-gate", "boarding gate exists"],
+    [html, "director-camera", "director camera exists"],
+    [html, "focus-beam", "focus beam exists"],
+    [html, "settle-gate", "settle gate exists"],
+    [html, "decision-rack", "decision rack exists"],
+    [html, "src/app.js?v=20260706e", "v5 JS cache marker"],
+    [html, "src/styles.css?v=20260706e", "v5 CSS cache marker"],
+    [appJs, "fifty-loop-director-v5", "v5 marker"],
+    [appJs, "forceHomeSettled", "home gate hook"],
+    [appJs, "forceSceneSettled", "scene gate hook"],
+    [appJs, "button.disabled = true", "input disabled outside settle"],
+    [appJs, "phase !== \"settled\"", "early input guard"],
+    [css, "position: fixed", "fixed app stage"],
+    [css, "overflow: hidden", "no document scroll"],
+    [css, "@keyframes shutterOpen", "opening animation"],
+    [css, "@keyframes trackRush", "continuous track motion"],
+    [css, ".director-camera[data-phase=\"settled\"]", "settled phase styling"],
+    [css, ".settle-gate[data-open=\"false\"]", "locked interaction styling"],
   ];
   for (const [haystack, needle, label] of required) {
     if (!haystack.includes(needle)) throw new Error(`static contract failed: ${label}`);
   }
+  const banned = ["story-stage", "story-ticket", "ticket-dock", "narrator-bubble"];
+  for (const term of banned) {
+    if (html.includes(term) || css.includes(term)) throw new Error(`old web-game shell term leaked: ${term}`);
+  }
 }
-
 async function runSmoke() {
   const server = spawn("python", ["-m", "http.server", String(PORT), "--bind", "127.0.0.1"], { cwd: REPO, stdio: "ignore", shell: false });
   let chromeProc = null;
@@ -152,13 +147,11 @@ async function runSmoke() {
   try {
     await waitForHttp(`${BASE}/index.html`);
     await runStaticContract();
-
     const chrome = CHROME_PATHS.find((p) => existsSync(p));
     if (!chrome || typeof WebSocket === "undefined") {
-      console.log("LEARNING_GAME_SMOKE_PASS static-continuous-directed-animation");
+      console.log("FIFTY_LOOP_DIRECTOR_V5_PASS static-contract");
       return;
     }
-
     userDataDir = mkdtempSync(path.join(tmpdir(), "lgs-chrome-"));
     chromeProc = spawn(chrome, [
       "--headless=new",
@@ -179,58 +172,64 @@ async function runSmoke() {
     await cdp.send("Emulation.setDeviceMetricsOverride", { width: 390, height: 665, deviceScaleFactor: 2, mobile: true });
     await cdp.send("Page.navigate", { url: `${BASE}/index.html` });
     await waitForExpr(cdp, "document.readyState === 'complete'");
-    await waitForExpr(cdp, "window.__MECHANISM_RUN_DEBUG__ && document.querySelectorAll('.guided-ticket').length >= 1");
+    await waitForExpr(cdp, "window.__MECHANISM_RUN_DEBUG__ && document.querySelectorAll('.ride-capsule').length >= 1");
 
     const opening = await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot()");
-    if (opening.marker !== "continuous-directed-animation" || opening.screen !== "home" || !opening.hasMotionLayers || !opening.hasGuidance) {
-      throw new Error(`bad opening snapshot ${JSON.stringify(opening)}`);
+    if (opening.marker !== "fifty-loop-director-v5" || opening.screen !== "home" || opening.homePhase !== "intro" || opening.bodyOverflow !== "hidden") {
+      throw new Error(`opening is not a fixed cinematic stage ${JSON.stringify(opening)}`);
     }
-    await screenshot(cdp, "phone-opening-cinematic.png");
+    const openingShot = await screenshot(cdp, "phone-opening-camera.png");
 
-    await evalExpr(cdp, "document.getElementById('app').dataset.homePhase = 'arrival'; document.querySelector('.guided-ticket').click(); window.__MECHANISM_RUN_DEBUG__.snapshot()");
-    const rejectedEarlyTap = await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot()");
-    if (rejectedEarlyTap.screen !== "home") throw new Error(`ticket accepted before director settled ${JSON.stringify(rejectedEarlyTap)}`);
+    await evalExpr(cdp, "document.getElementById('boardButton').click(); true");
+    const rejected = await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot()");
+    if (rejected.screen !== "home") throw new Error(`boarding allowed before guide settled ${JSON.stringify(rejected)}`);
 
-    await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.forceHomeSettled(); document.querySelector('.guided-ticket').click(); true");
+    await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.forceHomeSettled(); true");
+    await waitForExpr(cdp, "document.getElementById('boardButton').disabled === false");
+    await evalExpr(cdp, "document.getElementById('boardButton').click(); true");
     await waitForExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot().screen === 'run'");
     const travel = await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot()");
-    if (travel.phase !== "travel" || travel.choicesEnabled) throw new Error(`travel phase should not accept input ${JSON.stringify(travel)}`);
-    await screenshot(cdp, "phone-ride-travel.png");
+    if (travel.phase !== "travel" || travel.choicesEnabled || !travel.hasCamera || !travel.hasBeam || !travel.hasGuide) {
+      throw new Error(`travel phase failed locked-motion contract ${JSON.stringify(travel)}`);
+    }
+    const travelShot = await screenshot(cdp, "phone-travel-locked.png");
 
-    await evalExpr(cdp, "document.querySelector('.steer-card').click(); true");
-    const ignoredTravelTap = await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot()");
-    if (ignoredTravelTap.answers !== 0) throw new Error(`choice accepted while still traveling ${JSON.stringify(ignoredTravelTap)}`);
+    await evalExpr(cdp, "document.querySelector('.steer-lever').click(); true");
+    const ignored = await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot()");
+    if (ignored.answers !== 0) throw new Error(`steering accepted before settle ${JSON.stringify(ignored)}`);
 
     await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.forceSceneSettled(); true");
     await waitForExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot().choicesEnabled === true");
     const settled = await evalExpr(cdp, `({
       ...window.__MECHANISM_RUN_DEBUG__.snapshot(),
-      stageHeight: Math.round(document.querySelector('.director-stage').getBoundingClientRect().height),
-      frameWidth: Math.round(document.querySelector('.experience-frame').getBoundingClientRect().width),
       viewportWidth: window.innerWidth,
-      bodyOverflowX: getComputedStyle(document.body).overflowX,
-      guideText: document.getElementById('directorLine').textContent,
+      scrollWidth: document.documentElement.scrollWidth,
+      frameHeight: Math.round(document.querySelector('.director-frame').getBoundingClientRect().height),
+      cameraHeight: Math.round(document.querySelector('.director-camera').getBoundingClientRect().height),
+      guideText: document.getElementById('guideLine').textContent,
       cueText: document.getElementById('interactionCue').textContent,
-      enabledChoices: [...document.querySelectorAll('.steer-card')].filter((button) => !button.disabled).length,
+      enabledChoices: [...document.querySelectorAll('.steer-lever')].filter((button) => !button.disabled).length,
     })`);
     if (settled.phase !== "settled" || settled.enabledChoices < 2 || !settled.guideText || !settled.cueText) {
-      throw new Error(`settled interaction window failed ${JSON.stringify(settled)}`);
+      throw new Error(`settled gate failed ${JSON.stringify(settled)}`);
     }
-    if (settled.stageHeight < 260) throw new Error(`director stage too small ${settled.stageHeight}`);
-    if (settled.frameWidth > settled.viewportWidth + 1) throw new Error(`experience frame overflow ${JSON.stringify(settled)}`);
-    const primaryScreenshot = await screenshot(cdp, "phone-directed-experience.png");
+    if (settled.scrollWidth > settled.viewportWidth + 1) throw new Error(`horizontal overflow ${JSON.stringify(settled)}`);
+    if (settled.cameraHeight < 260) throw new Error(`director camera too small ${JSON.stringify(settled)}`);
+    const settledShot = await screenshot(cdp, "phone-settled-levers.png");
 
-    await evalExpr(cdp, "document.querySelector('.steer-card').click(); true");
+    await evalExpr(cdp, "document.querySelector('.steer-lever').click(); true");
     await waitForExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot().feedbackVisible === true");
     const outcome = await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot()");
     if (outcome.phase !== "outcome" || outcome.answers !== 1 || !outcome.feedbackVisible) {
-      throw new Error(`outcome did not animate then explain ${JSON.stringify(outcome)}`);
+      throw new Error(`outcome did not animate before explanation ${JSON.stringify(outcome)}`);
     }
-    const outcomeScreenshot = await screenshot(cdp, "phone-outcome-scroll.png");
+    const outcomeShot = await screenshot(cdp, "phone-outcome-scroll.png");
 
-    console.log("LEARNING_GAME_SMOKE_PASS continuous-directed-animation");
-    console.log(`LEARNING_GAME_SCREENSHOT ${primaryScreenshot}`);
-    console.log(`LEARNING_GAME_SCREENSHOT_OUTCOME ${outcomeScreenshot}`);
+    console.log("FIFTY_LOOP_DIRECTOR_V5_PASS continuous-guided-experience");
+    console.log(`FIFTY_LOOP_SCREENSHOT_OPENING ${openingShot}`);
+    console.log(`FIFTY_LOOP_SCREENSHOT_TRAVEL ${travelShot}`);
+    console.log(`FIFTY_LOOP_SCREENSHOT_SETTLED ${settledShot}`);
+    console.log(`FIFTY_LOOP_SCREENSHOT_OUTCOME ${outcomeShot}`);
   } finally {
     if (cdp) cdp.close();
     if (chromeProc) chromeProc.kill("SIGTERM");
@@ -243,6 +242,6 @@ async function runSmoke() {
 }
 
 runSmoke().catch((err) => {
-  console.error("LEARNING_GAME_SMOKE_FAIL", err.message);
+  console.error("FIFTY_LOOP_DIRECTOR_V5_FAIL", err.message);
   process.exit(1);
 });

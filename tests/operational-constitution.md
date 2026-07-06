@@ -1,17 +1,22 @@
 # Learning Game Operational Constitution
 
-The game passes only when the entire session feels like a **directed animated experience**. It may settle for interaction, but it must never read as a static web page, dashboard, card game, or quiz screen.
+The game passes only when the session is a **continuous guided animated experience**, not an animated web page, dashboard, static card game, or quiz screen.
+
+Owner correction: v4 was not enough. The bar is roughly “50 more loops”: from first paint to close, motion/visual staging/guidance carries the player, and the system settles only to let them interact.
 
 | Gate | PASS condition |
 |---|---|
 | Public phone handoff | GitHub Pages URL is the primary test link for Telegram handoffs. No localhost/LAN as the real link. |
-| Immediate motion | From first paint, the surface has continuous animation: curtain/opening, aurora/grain, moving world/track, train/wheels. |
-| Directed opening | The opening has phases (`arrival → settling → choose`) with guide text. Tickets are not the whole experience; they appear only after the director settles the scene. |
-| Interaction windows | During run scenes, choices are disabled/soft until phase `settled`; the player only interacts at guided quiet moments. |
-| Scene director | Each question is a scene with travel and reveal phases before input. The stage has parallax, rider wheel, guide/orb, spirit, caption, and question reveal. |
-| Outcome animation | Answering moves the stage into `outcome`, changes visual result, then shows the explanation scroll. |
-| Minimal web chrome | No table/card/dashboard language as primary surface. UI terms are ride/ticket/scene/wheel/guide/static/heart. |
-| Phone viewport | `390x665` smoke has no horizontal overflow and produces `artifacts/learning-game-v4/phone-directed-experience.png`. |
+| First second | First paint includes camera/tunnel/world motion. No static hero/page shell. |
+| No document browsing | App is fixed-height, no document-scroll experience, no dashboard/page sections as the primary surface. |
+| Guided opening | Home has `intro → approach → board`; boarding is disabled until the director settles. |
+| Diegetic selection | Deck selection is a boarding capsule/gate, not a generic card grid/list. |
+| Moving scene | Run screen has director camera, focus beam, guide orb, rider wheel, claim spirit, rail stream, rail lights. |
+| Interaction sanctity | Steering levers are disabled and muted until phase `settled`; early taps do nothing. |
+| Scene rhythm | Each learning prompt moves through travel/reveal/settled/outcome phases. |
+| Consequence first | Answer changes stage result before explanation/source text appears. |
+| Regression bans | Old shell terms/classes (`story-stage`, `story-ticket`, `ticket-dock`, `narrator-bubble`) are absent. |
+| Phone proof | `390x665` smoke captures opening, travel, settled levers, and outcome under `artifacts/learning-game-v5/`. |
 
 Command bundle:
 
@@ -24,6 +29,9 @@ Expected stdout includes:
 
 ```text
 AUDIT PASS
-LEARNING_GAME_SMOKE_PASS continuous-directed-animation
-LEARNING_GAME_SCREENSHOT .../artifacts/learning-game-v4/phone-directed-experience.png
+FIFTY_LOOP_DIRECTOR_V5_PASS continuous-guided-experience
+FIFTY_LOOP_SCREENSHOT_OPENING .../artifacts/learning-game-v5/phone-opening-camera.png
+FIFTY_LOOP_SCREENSHOT_TRAVEL .../artifacts/learning-game-v5/phone-travel-locked.png
+FIFTY_LOOP_SCREENSHOT_SETTLED .../artifacts/learning-game-v5/phone-settled-levers.png
+FIFTY_LOOP_SCREENSHOT_OUTCOME .../artifacts/learning-game-v5/phone-outcome-scroll.png
 ```

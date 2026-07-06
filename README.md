@@ -19,7 +19,7 @@ Localhost/LAN links are not valid Telegram handoffs; use GitHub Pages for owner 
 
 ## Experience loop
 
-This is not a flashcard viewer, web-page game, or static card loop. The app runs as a directed animated ride: from first paint there is motion and guidance; the scene settles only when the player should interact. Decks are tickets, questions are scenes, answers are steering moves, and explanations arrive after the outcome animation.
+This is not a flashcard viewer, web-page game, or static card loop. V5 follows a 50-loop director standard: from first paint, the player is inside a moving idea-machine. The opening is cinematic, boarding is gated until the guide settles, questions travel/reveal before input, steering levers stay disabled until the quiet interaction window, and explanations appear only after the animated consequence.
 
 ## Verify
 
