@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "default_pack_id": "nvidiaai-llm-memorization-capacity-20260706",
+  "packs": [
+    {
+      "pack_id": "nvidiaai-llm-memorization-capacity-20260706",
+      "path": "content/packs/nvidiaai-llm-memorization-capacity-20260706.json",
+      "title": "LLM memorization capacity: 3.6 bits per parameter",
+      "forge_profile": "courtroom",
+      "difficulty_band": "solid",
+      "arena": "Memorization Court",
+      "reward_skin": "Capacity Ruler",
+      "tone": "Put claims about memorization, privacy, and scaling under evidence pressure."
+    },
+    {
+      "pack_id": "badb01e-pipeline-parallelism-20260706",
+      "path": "content/packs/badb01e-pipeline-parallelism-20260706.json",
+      "title": "Inference parallelism: pipeline vs tensor",
+      "forge_profile": "boss-fight",
+      "difficulty_band": "solid",
+      "arena": "Interconnect Arena",
+      "reward_skin": "Latency Lens",
+      "tone": "Pressure-test the mechanism, not the buzzwords."
+    },
+    {
+      "pack_id": "alexwg-orbital-data-embassies-20260706",
+      "path": "content/packs/alexwg-orbital-data-embassies-20260706.json",
+      "title": "Orbital data embassies: sovereignty, memory, and risk",
+      "forge_profile": "courtroom",
+      "difficulty_band": "solid",
+      "arena": "Sovereignty Court",
+      "reward_skin": "Orbital Seal",
+      "tone": "Separate legal mechanism, resilience claim, and sales claim under pressure."
+    }
+  ]
+}

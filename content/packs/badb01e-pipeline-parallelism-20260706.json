@@ -1,0 +1,119 @@
+{
+  "pack_id": "badb01e-pipeline-parallelism-20260706",
+  "title": "Inference parallelism: pipeline vs tensor",
+  "source_intake": "https://x.com/0xbadb01e/status/2073990357398982797",
+  "grounding_status": "VERIFIED",
+  "sources": [
+    {
+      "type": "url",
+      "ref": "https://x.com/0xbadb01e/status/2073990357398982797",
+      "notes": "Answer key item in x_search synthesis tied to pipeline parallelism vs per-user token latency"
+    },
+    {
+      "type": "url",
+      "ref": "https://x.com/0xBADB01E/status/2073970411138949533",
+      "notes": "Parent thread: interconnect latency as inference binding constraint"
+    }
+  ],
+  "difficulty_band": "solid",
+  "forge_profile": "boss-fight",
+  "game_hooks": {
+    "arena": "Interconnect Arena",
+    "reward_skin": "Latency Lens",
+    "tone": "Pressure-test the mechanism, not the buzzwords."
+  },
+  "questions": [
+    {
+      "id": "q1",
+      "stem": "For per-user token latency on a large autoregressive model when links are high-latency, which sharding strategy usually reduces per-chip memory bandwidth pressure more directly?",
+      "choices": [
+        "Tensor parallelism (layers split across chips with frequent all-reduces)",
+        "Pipeline parallelism (layers staged; activations are small payloads between stages)",
+        "Data parallelism only",
+        "Increasing batch size on a single chip"
+      ],
+      "correct_index": 1,
+      "explanation": "Pipeline parallelism shards layers so each chip holds a slice of the stack; between stages the payload is small (e.g. activations on the order of KB), which helps when the bottleneck is memory wait and link latency rather than raw FLOPs.",
+      "mechanism_tags": ["pipeline-parallelism", "inference", "memory-bound"],
+      "source_anchor": "BadB01E thread synthesis: pipeline vs tensor for per-user token speed under high-latency links",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q2",
+      "stem": "Why does autoregressive decode often show low effective FLOP utilization on GPUs built for training-scale collectives?",
+      "choices": [
+        "Activation functions dominate compute",
+        "The chip stalls waiting on memory while most FLOPs sit idle",
+        "KV cache is always too large for SRAM",
+        "All-reduce is free on inference"
+      ],
+      "correct_index": 1,
+      "explanation": "Decode is memory-latency sensitive; oversized FLOP arrays relative to the memory pipe leave silicon idle while waiting on weights/KV traffic.",
+      "mechanism_tags": ["decode", "MFU", "memory-bound"],
+      "source_anchor": "BadB01E thread: low MFU on decode despite large dies",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q3",
+      "stem": "In the thread's framing, what is argued to be an even sharper binding constraint than memory bandwidth alone for scaling inference?",
+      "choices": [
+        "Peak FP8 FLOPs",
+        "Interconnect latency (and how it shapes the whole system)",
+        "CUDA version",
+        "Cooling capacity"
+      ],
+      "correct_index": 1,
+      "explanation": "The thesis works backward from link latency: it dictates memory choices, disaggregation, and how much compute to provision per byte delivered.",
+      "mechanism_tags": ["interconnect", "latency", "systems"],
+      "source_anchor": "BadB01E: interconnect as binding constraint",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q4",
+      "stem": "A proposed 'balance the pipeline' chip provisions ~280 TFLOPS FP4 instead of ~1250 TFLOPS. What reasoning supports that?",
+      "choices": [
+        "Training needs fewer FLOPs than inference",
+        "Match FLOPs to the memory bandwidth pipe (~250 FLOPs per delivered byte at stated batch/precision), not maximal FLOPs",
+        "LPDDR cannot do FP4",
+        "SerDes ports replace the MAC array"
+      ],
+      "correct_index": 1,
+      "explanation": "Over-provisioning FLOPs relative to the memory/interconnect pipe wastes area and power; the design sizes compute to what the pipe can feed.",
+      "mechanism_tags": ["balance-pipeline", "FLOPs-per-byte"],
+      "source_anchor": "BadB01E proposed chip economics",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q5",
+      "stem": "Inside the proposed low-latency pod, what topology is used for the latency-critical domain?",
+      "choices": [
+        "Centralized NVLink switch only",
+        "Full mesh across eight chips (multiple ports per chip)",
+        "Pure dragonfly at chip scale",
+        "3D torus inside each die"
+      ],
+      "correct_index": 1,
+      "explanation": "An 8-chip full mesh minimizes hop count for the domain where tensor-style coordination must stay fast.",
+      "mechanism_tags": ["topology", "mesh", "pod"],
+      "source_anchor": "BadB01E pod scale posts",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q6",
+      "stem": "NO-HINT: You operate inference for 70B-class models. Users complain about time-to-first-token after a long context fill. Your links have ~microsecond-scale switch hops but HBM pools are small per chip. Without naming any blog post, what design move most directly attacks capacity + hop count together?",
+      "choices": [
+        "Double FP4 FLOPs on each GPU regardless of memory",
+        "Disaggregate with a low-hop pod and favor memory technologies that increase GB per TB/s of effective bandwidth",
+        "Disable KV cache",
+        "Only use data parallelism"
+      ],
+      "correct_index": 1,
+      "explanation": "Long context blows KV footprint; more local capacity per bandwidth dollar plus low-hop domains reduces round-trips that compound latency.",
+      "mechanism_tags": ["kv-cache", "disaggregation", "long-context"],
+      "source_anchor": "Thread theme: capacity per TB/s and pod latency",
+      "transfer_type": "no_hint"
+    }
+  ],
+  "critic_notes": "Pack derived from x_search synthesis of the thread, not full thread OCR. Add P1 audit script before treating as production content. Tensor vs pipeline nuance is simplified; boss tier should add all-reduce overhead numeric intuition.",
+  "forge_version": "1.0.0"
+}

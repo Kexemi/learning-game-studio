@@ -1,0 +1,149 @@
+{
+  "pack_id": "nvidiaai-llm-memorization-capacity-20260706",
+  "title": "LLM memorization capacity: 3.6 bits per parameter",
+  "source_intake": "https://x.com/nvidiaai/status/2074162777535516985?s=52",
+  "grounding_status": "PARTIAL",
+  "sources": [
+    {
+      "type": "url",
+      "ref": "https://x.com/nvidiaai/status/2074162777535516985",
+      "notes": "Direct NVIDIA AI X post retrieved with x_search: ICML paper separates unintended memorization from generalization and estimates GPT-style capacity at about 3.6 bits per parameter. Attached figure plots unintended memorization versus training set size and shows saturation below dataset size."
+    },
+    {
+      "type": "url",
+      "ref": "x_search query: \"How much can language models memorize\" \"3.6 bits per parameter\"",
+      "notes": "Supplemental X-search synthesis: experiments isolate memorization using low/no-generalization data and discuss privacy/scaling implications. Web extraction was unavailable in this Hermes session, so the full paper was not independently extracted."
+    }
+  ],
+  "difficulty_band": "solid",
+  "forge_profile": "courtroom",
+  "game_hooks": {
+    "arena": "Memorization Court",
+    "reward_skin": "Capacity Ruler",
+    "tone": "Put claims about memorization, privacy, and scaling under evidence pressure."
+  },
+  "questions": [
+    {
+      "id": "q1",
+      "stem": "The post says the paper separates unintended memorization from generalization. What is the main reason that separation matters?",
+      "choices": [
+        "It lets us distinguish storing specific training examples from learning reusable structure in the data.",
+        "It proves that language models never copy training data.",
+        "It removes the need for privacy testing because capacity is finite.",
+        "It shows that larger datasets always increase verbatim recall."
+      ],
+      "correct_index": 0,
+      "explanation": "The useful distinction is mechanism-level: memorization is dataset-specific storage, while generalization is learning patterns that transfer. The other choices overstate or invert the post's claim.",
+      "mechanism_tags": ["unintended-memorization", "generalization", "measurement"],
+      "source_anchor": "NVIDIA AI post: the ICML paper 'separates unintended memorization from generalization.'",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q2",
+      "stem": "If the reported rule of thumb is about 3.6 bits of memorization capacity per parameter, what does a model with N parameters have under that estimate?",
+      "choices": [
+        "About 3.6 × N bits of dataset-specific capacity.",
+        "About N / 3.6 bytes of exact training data capacity.",
+        "A capacity equal to the total number of training tokens it saw.",
+        "A fixed 3.6 GB capacity regardless of model size."
+      ],
+      "correct_index": 0,
+      "explanation": "The estimate scales with parameter count: multiply parameters by 3.6 bits. Bytes require dividing bits by 8, and the claim is not that capacity equals dataset size.",
+      "mechanism_tags": ["capacity-scaling", "bits-per-parameter"],
+      "source_anchor": "NVIDIA AI post: GPT-style model capacity estimated at about 3.6 bits per parameter.",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q3",
+      "stem": "Using the 3.6 bits/parameter estimate, why is a 7B-parameter model often summarized as having only a few GB of specific memorization capacity?",
+      "choices": [
+        "3.6 × 7B bits is about 25.2B bits, which is about 3.15 GB after dividing by 8.",
+        "7B parameters always store 7B bytes of text exactly.",
+        "The model stores one byte per token, independent of parameters.",
+        "The 3.6 number is already measured in gigabytes."
+      ],
+      "correct_index": 0,
+      "explanation": "The unit conversion matters: 3.6 bits/parameter × 7B parameters = 25.2B bits; bits to bytes divides by 8, yielding roughly 3.15 GB. This is a capacity estimate, not a guarantee of exact file-like storage.",
+      "mechanism_tags": ["unit-conversion", "capacity-scaling", "privacy"],
+      "source_anchor": "x_search synthesis of the NVIDIA AI post discussion: 7B parameters imply roughly 25 billion bits, or about 3 GB, under the 3.6 bits/parameter estimate.",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q4",
+      "stem": "In the attached figure described by x_search, memorization rises as training set size increases and then plateaus far below the dataset-size reference line. What is the best interpretation?",
+      "choices": [
+        "The model has a finite capacity for dataset-specific storage, so adding more data does not make memorization grow without bound.",
+        "The model stops learning anything once the dataset gets large.",
+        "The dataset-size reference line is the model's loss curve.",
+        "The plateau proves all memorized examples are harmless."
+      ],
+      "correct_index": 0,
+      "explanation": "The plateau is a capacity signal: unintended memorization saturates. It does not mean the model stops improving via generalization, and it does not eliminate privacy risk.",
+      "mechanism_tags": ["saturation", "capacity-limit", "figure-reading"],
+      "source_anchor": "x_search image understanding: the figure plots unintended memorization versus training set size and shows curves plateauing below the dataset-size reference line.",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q5",
+      "stem": "Which privacy conclusion is the most defensible from the post's claim?",
+      "choices": [
+        "Finite capacity can bound the total amount of specific data the model can store, but sensitive examples can still be memorized and extracted.",
+        "Privacy attacks are impossible because 3.6 bits per parameter is small.",
+        "Only generalization can leak information, never memorization.",
+        "Training on more private data always reduces risk."
+      ],
+      "correct_index": 0,
+      "explanation": "A finite budget helps reason about risk, but it is not a safety proof. Small, repeated, rare, or fine-tuned sensitive data can still occupy part of the capacity budget and remain extractable.",
+      "mechanism_tags": ["privacy", "extraction-risk", "bounded-capacity"],
+      "source_anchor": "NVIDIA AI post: the estimate offers a sharper way to reason about data, scaling, and privacy.",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q6",
+      "stem": "What would be a bad critique of the 3.6 bits/parameter framing?",
+      "choices": [
+        "It may depend on architecture, data distribution, optimization, and how memorization is measured.",
+        "It should not be treated as a universal legal privacy guarantee.",
+        "It is useless because model weights are stored in far more than 3.6 bits per parameter.",
+        "It distinguishes memorization capacity from generalization, which is exactly the disputed boundary."
+      ],
+      "correct_index": 2,
+      "explanation": "Weight storage precision and effective memorized information are different quantities. A parameter can be stored in fp16/bf16 while only some effective information capacity is used for dataset-specific memorization. The other choices are reasonable caveats.",
+      "mechanism_tags": ["measurement-caveat", "effective-information", "model-weights"],
+      "source_anchor": "x_search synthesis: discussion distinguishes effective memorized bits from raw storage precision and frames the result as a rule of thumb, not an absolute guarantee.",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q7",
+      "stem": "A team trains a much larger model on the same kind of data. Under the post's capacity framing, what changes most directly?",
+      "choices": [
+        "The maximum dataset-specific memorization capacity increases roughly in proportion to parameter count.",
+        "The model is forced to memorize every training example verbatim.",
+        "The bits-per-parameter estimate means capacity is independent of parameter count.",
+        "Generalization becomes impossible because all capacity is spent on memorization."
+      ],
+      "correct_index": 0,
+      "explanation": "If the empirical rule holds, more parameters mean a larger finite memorization budget. That still does not imply the model memorizes everything or fails to generalize.",
+      "mechanism_tags": ["scaling", "parameter-count", "memorization-budget"],
+      "source_anchor": "NVIDIA AI post: model capacity is estimated per parameter, implying proportional scaling with parameter count.",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q8",
+      "stem": "NO-HINT: A company fine-tunes a 1B-parameter model on a small confidential support-ticket corpus and then claims, 'The internet-scale pretraining result means privacy risk is tiny.' What is the best response?",
+      "choices": [
+        "Wrong confidence: a small private corpus can fit inside a large model's finite memorization budget, so targeted privacy testing is still needed.",
+        "Correct: finite capacity always protects fine-tuning data.",
+        "Correct only if the fine-tuning data is in English.",
+        "Wrong because models have infinite memorization capacity."
+      ],
+      "correct_index": 0,
+      "explanation": "The capacity result is not a blanket safe harbor. When the sensitive corpus is small relative to model capacity, the model may store high-fidelity details, especially after fine-tuning or repetition.",
+      "mechanism_tags": ["fine-tuning", "privacy", "transfer"],
+      "source_anchor": "Transfer from NVIDIA AI post's privacy framing plus x_search discussion of fine-tuning/proprietary-data risk under finite capacity.",
+      "transfer_type": "no_hint"
+    }
+  ],
+  "critic_notes": "Grounding is PARTIAL: the NVIDIA X post and image summary were retrieved through x_search, but Firecrawl/web extraction was unavailable and the full ICML paper/arXiv PDF was not independently fetched. The deck teaches the mechanism and caveats without leaning on unverified numeric details beyond the public 3.6 bits/parameter claim and a simple unit conversion verified in-session.",
+  "forge_version": "1.1.0"
+}

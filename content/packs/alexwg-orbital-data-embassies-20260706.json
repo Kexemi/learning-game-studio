@@ -1,0 +1,181 @@
+{
+  "pack_id": "alexwg-orbital-data-embassies-20260706",
+  "title": "Orbital data embassies: sovereignty, memory, and risk",
+  "source_intake": "https://x.com/alexwg/status/2074123504748765264?s=52",
+  "grounding_status": "PARTIAL",
+  "sources": [
+    {
+      "type": "url",
+      "ref": "https://x.com/alexwg/status/2074123504748765264?s=52",
+      "notes": "X post by @alexwg, retrieved through x_search synthesis. Direct web extraction was unavailable; mission/timeline details are explicitly disclosed by the source as third-party/unverified."
+    },
+    {
+      "type": "url",
+      "ref": "https://x.com/i/status/2074123504748765264",
+      "notes": "Canonical status URL used by x_search citations."
+    }
+  ],
+  "difficulty_band": "solid",
+  "forge_profile": "courtroom",
+  "game_hooks": {
+    "arena": "Sovereignty Court",
+    "reward_skin": "Orbital Seal",
+    "tone": "Separate legal mechanism, resilience claim, and sales claim under pressure."
+  },
+  "questions": [
+    {
+      "id": "q1",
+      "stem": "In the post's analogy, what is the key function of an embassy that makes it relevant to data infrastructure?",
+      "choices": [
+        "It makes all data physically immune to hardware failure",
+        "It creates a legal zone where a nation can project jurisdiction without controlling the surrounding territory",
+        "It replaces cryptographic controls with diplomatic immunity",
+        "It turns a backup provider into a cloud compute monopoly"
+      ],
+      "correct_index": 1,
+      "explanation": "The embassy analogy is about jurisdiction and inviolability: a state can preserve legal authority over a protected enclave outside its own territory. That matters for sovereign records more than for raw storage capacity.",
+      "mechanism_tags": [
+        "jurisdiction",
+        "embassy-analogy",
+        "sovereign-data"
+      ],
+      "source_anchor": "x_search synthesis of @alexwg post: embassies under the 1961 Vienna Convention as legal fiction where national law applies without physical territory",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q2",
+      "stem": "Why does the post use Estonia's Luxembourg data embassy as a precedent rather than just citing ordinary off-site backups?",
+      "choices": [
+        "Because it stored public websites only, making it cheaper than disaster recovery",
+        "Because it combined geographic separation with treaty-backed governance under Estonia's law after cyberattack risk became concrete",
+        "Because Luxembourg satellites already host the Estonian registries",
+        "Because it removed the need for national identity systems"
+      ],
+      "correct_index": 1,
+      "explanation": "The precedent is not merely copying bits elsewhere. It is the combination of operational continuity, foreign location, and legal sovereignty over critical state registries.",
+      "mechanism_tags": [
+        "estonia",
+        "data-embassy",
+        "cyber-resilience"
+      ],
+      "source_anchor": "x_search synthesis: Estonia created data embassy copies in Luxembourg after 2007 cyberattacks; governed by Estonian law under treaty",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q3",
+      "stem": "What failure mode does the post claim remains unsolved by terrestrial redundancy, including famous backup sites like Svalbard?",
+      "choices": [
+        "Terrestrial backups cannot use encryption",
+        "All Earth-based redundancy still shares single-planet exposure to war, seizure, disaster, climate, and geopolitical disruption",
+        "Physical vaults cannot store biological or digital information",
+        "Cloud regions always erase data after one year"
+      ],
+      "correct_index": 1,
+      "explanation": "The argument is boundary-of-risk: moving copies around Earth reduces local hazards but does not escape planet-wide correlated risks or terrestrial legal/geopolitical pressure.",
+      "mechanism_tags": [
+        "risk-boundary",
+        "redundancy",
+        "planetary-risk"
+      ],
+      "source_anchor": "x_search synthesis: terrestrial backups and Svalbard are framed as imperfect because redundancy on one planet shares fate",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q4",
+      "stem": "In the post's legal mechanism, why does registering a satellite matter for an orbital data embassy?",
+      "choices": [
+        "Registration makes the satellite invisible to all other states",
+        "Under space treaties, a registered space object remains under the jurisdiction and control of its registering state",
+        "Registration transfers ownership of the orbital shell to the customer",
+        "Registration guarantees the data can never be jammed, damaged, or delayed"
+      ],
+      "correct_index": 1,
+      "explanation": "The sovereignty claim depends on jurisdiction and control following the registered object, not on magical immunity from physical attack or operational failure.",
+      "mechanism_tags": [
+        "outer-space-treaty",
+        "registration-convention",
+        "jurisdiction"
+      ],
+      "source_anchor": "x_search synthesis: 1967 Outer Space Treaty and 1975 Registration Convention keep registered satellites under registering-state jurisdiction",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q5",
+      "stem": "What is the strongest distinction between the proposed StarVault-style service and a symbolic time capsule such as a lunar archive?",
+      "choices": [
+        "A time capsule is always illegal in space",
+        "The proposed service is positioned as retrievable, cryptographically secured, operational sovereign data under customer law—not merely a static artifact",
+        "A time capsule cannot survive vacuum",
+        "The proposed service is valuable only because orbit has lower latency than Earth data centers"
+      ],
+      "correct_index": 1,
+      "explanation": "The claimed product is jurisdiction plus operational control and retrievability. A passive archive can preserve data but does not itself establish the same service model or legal governance layer.",
+      "mechanism_tags": [
+        "product-positioning",
+        "time-capsule",
+        "retrievability"
+      ],
+      "source_anchor": "x_search synthesis: post contrasts Lonestar/StarVault with Arch Mission Lunar Library and unbuilt concepts; sells jurisdiction and sovereignty, not just storage",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q6",
+      "stem": "Why does the post connect orbital data embassies to the Singularity rather than treating them as ordinary enterprise backup?",
+      "choices": [
+        "Because orbital storage automatically trains AI models faster",
+        "Because planetary-scale AI and institutions need durable memory—training data, records, and identity—that may need to survive Earth-bound catastrophe",
+        "Because data in orbit is exempt from all copyright and privacy law",
+        "Because satellites remove the need for ground networks"
+      ],
+      "correct_index": 1,
+      "explanation": "The Singularity framing is a memory-and-continuity claim: civilization-scale computation needs persistent records and institutional memory, not just more compute throughput.",
+      "mechanism_tags": [
+        "civilizational-memory",
+        "ai-continuity",
+        "singularity"
+      ],
+      "source_anchor": "x_search synthesis: post frames orbital data embassies as long-term memory for planetary-scale computation and AI",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q7",
+      "stem": "A careful reader sees that the author advises Lonestar and has a financial interest through 021T Capital. What should that disclosure change?",
+      "choices": [
+        "It proves all technical claims are false",
+        "It lowers the burden of verification for timelines because insiders are always more accurate",
+        "It raises the need to separate the conceptual mechanism from promotional claims and independently verify mission details, timelines, and operational status",
+        "It makes legal analysis unnecessary"
+      ],
+      "correct_index": 2,
+      "explanation": "Conflict disclosure does not invalidate the thesis, but it changes evidentiary posture. The mechanism can be interesting while timelines, customer readiness, and legal enforceability still need independent checks.",
+      "mechanism_tags": [
+        "conflict-disclosure",
+        "evidence-burden",
+        "claim-court"
+      ],
+      "source_anchor": "x_search synthesis: post includes disclosure of advisory role, financial interest, third-party/unverified mission details, and not-investment-advice framing",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q8",
+      "stem": "NO-HINT: A small digital-first country wants continuity for citizen registries through cyberattack, regional war, and possible seizure pressure. Which architecture best matches the mechanism in the post without overclaiming?",
+      "choices": [
+        "Keep one encrypted copy in the capital because sovereignty is strongest at home",
+        "Use layered redundancy: domestic systems, treaty-backed terrestrial data embassy, and a registered orbital escrow for the highest-value records, while separately validating retrieval, latency, legal enforceability, and vendor survivability",
+        "Move all live government systems to an orbital satellite and shut down Earth data centers",
+        "Publish the registry as a public blockchain so no jurisdiction matters"
+      ],
+      "correct_index": 1,
+      "explanation": "The post's mechanism argues for escaping correlated jurisdictional and planetary risks, but a serious implementation would be layered and proof-gated. Orbit can be an escrow/sovereignty layer, not a magic replacement for all live operations.",
+      "mechanism_tags": [
+        "architecture-transfer",
+        "layered-resilience",
+        "no-hint"
+      ],
+      "source_anchor": "Thread theme: data embassies move sovereign memory across legal/physical risk boundaries; disclosure requires verification of operational claims",
+      "transfer_type": "no_hint"
+    }
+  ],
+  "critic_notes": "Grounding is PARTIAL because direct web extraction failed and the pack relies on x_search synthesis of the X post rather than full raw post text. Strongest questions test mechanism and evidentiary posture; weakest area is detailed treaty interpretation, which should be reviewed by a legal source before boss-tier claims. Timelines such as April 2027 StarVault are treated as source claims, not established fact.",
+  "forge_version": "1.1.0"
+}

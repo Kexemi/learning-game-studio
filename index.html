@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f1419" />
+  <title>Mechanism Run — Learn by playing</title>
+  <link rel="stylesheet" href="src/styles.css?v=20260706a" />
+</head>
+<body>
+  <div id="app" class="app-shell" data-screen="home">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">◆</span>
+        <div>
+          <p class="brand-kicker">Learning game</p>
+          <h1 class="brand-title">Mechanism Run</h1>
+        </div>
+      </div>
+      <div class="streak-pill" id="streakPill" hidden>
+        <span id="streakLabel">0 mastered</span>
+      </div>
+    </header>
+
+    <main class="stage">
+      <section class="screen screen-active" data-view="home" id="viewHome">
+        <p class="lede">Turn dense threads into short runs. Pick a deck, answer under light pressure, leave with the mechanism—not the skim.</p>
+        <div id="deckList" class="deck-list" role="list"></div>
+        <p class="hint" id="loadHint">Loading decks…</p>
+      </section>
+
+      <section class="screen" data-view="run" id="viewRun" hidden>
+        <div class="run-header">
+          <button type="button" class="ghost-btn" id="btnExitRun" aria-label="Exit run">← Decks</button>
+          <div class="run-meta">
+            <p class="run-arena" id="runArena"></p>
+            <p class="run-title" id="runTitle"></p>
+          </div>
+        </div>
+        <div class="progress-track" aria-hidden="true">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <p class="progress-label" id="progressLabel"></p>
+        <article class="question-card" id="questionCard">
+          <p class="question-tag" id="questionTag"></p>
+          <h2 class="question-stem" id="questionStem"></h2>
+          <div class="choices" id="choices" role="list"></div>
+        </article>
+        <div class="feedback" id="feedback" hidden>
+          <p class="feedback-verdict" id="feedbackVerdict"></p>
+          <p class="feedback-body" id="feedbackBody"></p>
+          <button type="button" class="primary-btn" id="btnNext">Continue</button>
+        </div>
+      </section>
+
+      <section class="screen" data-view="summary" id="viewSummary" hidden>
+        <div class="summary-hero">
+          <p class="summary-kicker">Run complete</p>
+          <h2 class="summary-title" id="summaryTitle"></h2>
+          <p class="summary-score" id="summaryScore"></p>
+        </div>
+        <div class="mastery-meter">
+          <div class="mastery-fill" id="masteryFill"></div>
+        </div>
+        <p class="summary-reward" id="summaryReward"></p>
+        <ul class="summary-tags" id="summaryTags"></ul>
+        <button type="button" class="primary-btn" id="btnReplay">Play again</button>
+        <button type="button" class="ghost-btn block" id="btnHome">Back to decks</button>
+      </section>
+    </main>
+  </div>
+  <script src="src/app.js?v=20260706a" type="module"></script>
+</body>
+</html>
