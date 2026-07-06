@@ -3,114 +3,121 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#060914" />
-  <title>Mechanism Run — Story on wheels</title>
-  <link rel="stylesheet" href="src/styles.css?v=20260706c" />
+  <meta name="theme-color" content="#050712" />
+  <title>Mechanism Run — Directed ride</title>
+  <link rel="stylesheet" href="src/styles.css?v=20260706d" />
 </head>
 <body>
-  <div id="app" class="story-app" data-screen="home">
-    <main class="story-shell">
-      <section class="screen screen-active home-scene" data-view="home" id="viewHome">
-        <div class="storybook-stage home-stage" id="homeStage" aria-label="Animated story stage">
-          <div class="moon" aria-hidden="true"></div>
-          <div class="starfield" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
-          <div class="cloud cloud-a" aria-hidden="true"></div>
-          <div class="cloud cloud-b" aria-hidden="true"></div>
+  <div id="app" class="immersive-app" data-screen="home" data-home-phase="arrival">
+    <div class="ambient-motion" aria-hidden="true">
+      <span class="aurora a1"></span>
+      <span class="aurora a2"></span>
+      <span class="grain"></span>
+    </div>
 
-          <div class="title-card">
-            <p class="eyebrow">Mechanism Run</p>
-            <h1>Ride the source. Beat the claim.</h1>
-            <p class="story-copy">A short animated run where each question is a scene, each answer steers the ride, and the mechanism becomes the way out.</p>
+    <main class="experience-frame">
+      <section class="screen screen-active home-experience" data-view="home" id="viewHome">
+        <div class="opening-cinematic" id="openingCinematic" aria-label="Opening cinematic">
+          <div class="curtain curtain-left" aria-hidden="true"></div>
+          <div class="curtain curtain-right" aria-hidden="true"></div>
+          <div class="sky-script" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="director-orb" aria-hidden="true"><span></span></div>
+          <div class="moving-world" aria-hidden="true">
+            <div class="layer mountains far"></div>
+            <div class="layer mountains near"></div>
+            <div class="rail-glow"></div>
+            <div class="ride-car intro-car"><b></b><i class="cw1"></i><i class="cw2"></i></div>
           </div>
-
-          <div class="rail-window" aria-hidden="true">
-            <div class="rolling-hills hills-back"></div>
-            <div class="rolling-hills hills-front"></div>
-            <div class="track-line"></div>
-            <div class="story-train intro-train">
-              <span class="engine-light"></span>
-              <span class="wheel w1"></span>
-              <span class="wheel w2"></span>
-              <span class="wheel w3"></span>
-            </div>
+          <div class="title-sequence">
+            <p class="microcopy">mechanism run</p>
+            <h1>Board the idea.</h1>
+            <p id="homeGuide" class="guide-line">The ride is arriving. Watch the source turn into a moving path.</p>
           </div>
         </div>
 
-        <div class="ticket-dock" id="deckList" role="list" aria-label="Choose a story run"></div>
-        <p class="load-hint" id="loadHint">Loading story runs…</p>
+        <div class="settle-panel" id="homeSettlePanel" aria-live="polite">
+          <p class="microcopy">when the motion settles</p>
+          <h2>Choose a glowing ticket.</h2>
+          <p>The ride keeps moving in the background. You only step in when the guide gives you a clean moment.</p>
+        </div>
+
+        <div class="ticket-rail" id="deckList" role="list" aria-label="Story tickets"></div>
+        <p class="load-hint" id="loadHint">The tickets are being punched…</p>
       </section>
 
-      <section class="screen run-scene" data-view="run" id="viewRun" hidden>
-        <header class="cinema-bar">
-          <button type="button" class="back-chip" id="btnExitRun" aria-label="Exit run">‹ tickets</button>
-          <div class="chapter-label">
-            <span id="runArena">Story rail</span>
-            <strong id="runTitle">Run</strong>
+      <section class="screen ride-experience" data-view="run" id="viewRun" hidden>
+        <div class="ride-hud" aria-label="Ride status">
+          <button type="button" class="soft-chip" id="btnExitRun">‹ tickets</button>
+          <div class="ride-title">
+            <span id="runArena">story rail</span>
+            <strong id="runTitle">run</strong>
           </div>
-          <div class="meter-cluster" aria-label="Run meters">
-            <span id="playerHpText">♥ 100</span>
-            <span id="bossHpText">Threat 100</span>
+          <div class="pulse-meters">
+            <span id="playerHpText">heart 100</span>
+            <span id="bossHpText">static 100</span>
           </div>
-        </header>
+        </div>
 
-        <div class="story-progress" id="runMap" aria-label="Story scene progress"></div>
+        <div class="scene-strip" id="runMap" aria-label="Scene strip"></div>
 
-        <section class="story-stage" id="storyStage" data-mood="ready" aria-live="polite">
-          <div class="stage-sky" aria-hidden="true">
-            <span class="spark s1"></span><span class="spark s2"></span><span class="spark s3"></span>
+        <section class="director-stage" id="directorStage" data-phase="travel" data-result="none" aria-live="polite">
+          <div class="motion-sky" aria-hidden="true"><i></i><i></i><i></i></div>
+          <div class="parallax-lane lane-back" aria-hidden="true"></div>
+          <div class="parallax-lane lane-mid" aria-hidden="true"></div>
+          <div class="track-stream" aria-hidden="true"></div>
+
+          <div class="guide-character" id="guideCharacter" aria-hidden="true">
+            <span class="guide-eye"></span>
           </div>
-          <div class="rolling-backdrop" aria-hidden="true"></div>
-          <div class="story-road" aria-hidden="true"></div>
-
-          <div class="villain-puppet" id="enemyPuppet" aria-hidden="true">
-            <span class="puppet-face" id="enemyAvatar">◈</span>
-            <span class="puppet-shadow"></span>
-          </div>
-
-          <div class="rider" aria-hidden="true">
-            <span class="rider-head"></span>
+          <div class="rider-wheel" aria-hidden="true">
             <span class="rider-body"></span>
-            <span class="traveler-wheel"></span>
+            <span class="main-wheel"></span>
+          </div>
+          <div class="claim-spirit" id="claimSpirit" aria-hidden="true">
+            <span id="enemyAvatar">◈</span>
           </div>
 
-          <article class="scene-card" id="sceneCard">
-            <div class="scene-topline">
-              <p class="scene-counter" id="storyCounter">Scene 1</p>
-              <p class="combo-badge" id="comboText">wheel x0</p>
-            </div>
-            <p class="narrator-bubble" id="narratorLine">The rail is waking up.</p>
-            <h2 id="questionStem">Loading scene…</h2>
-            <p class="enemy-line" id="enemyName">Claim ghost</p>
-            <p class="threat-line" id="threatPill">hit 10</p>
+          <div class="director-caption" id="directorCaption">
+            <p class="microcopy" id="storyCounter">scene 1</p>
+            <p id="directorLine">Rolling toward the first claim…</p>
+          </div>
+
+          <article class="settled-question" id="settledQuestion" aria-live="polite">
+            <p class="microcopy" id="enemyName">claim spirit</p>
+            <h2 id="questionStem">The guide is finding the question…</h2>
+            <p id="threatPill" class="threat-pill">settling</p>
           </article>
         </section>
 
-        <div class="choice-wheel" id="choices" role="list" aria-label="Choose how to steer the scene"></div>
+        <div class="interaction-window" id="interactionWindow" data-ready="false" aria-live="polite">
+          <p class="interaction-cue" id="interactionCue">Stay with the motion…</p>
+          <div class="choice-reel" id="choices" role="list" aria-label="Steering choices"></div>
+        </div>
 
-        <div class="result-ribbon" id="feedback" hidden>
+        <div class="outcome-scroll" id="feedback" hidden>
           <p class="result-verdict" id="feedbackVerdict"></p>
           <p class="result-copy" id="feedbackBody"></p>
           <p class="source-line" id="sourceLine"></p>
-          <button type="button" class="roll-button" id="btnNext">Roll onward</button>
+          <button type="button" class="roll-button" id="btnNext">continue the ride</button>
         </div>
       </section>
 
-      <section class="screen ending-scene" data-view="summary" id="viewSummary" hidden>
-        <div class="ending-stage">
+      <section class="screen ending-experience" data-view="summary" id="viewSummary" hidden>
+        <div class="ending-cinematic">
           <div class="ending-wheel" aria-hidden="true"></div>
-          <p class="eyebrow">Story complete</p>
-          <h2 id="summaryTitle">The rail quiets.</h2>
+          <p class="microcopy">ride complete</p>
+          <h2 id="summaryTitle">The path resolves.</h2>
           <p class="ending-score" id="summaryScore"></p>
           <div class="mastery-meter"><span id="masteryFill"></span></div>
           <p class="summary-reward" id="summaryReward"></p>
         </div>
         <div class="result-grid" id="resultGrid"></div>
         <ul class="summary-tags" id="summaryTags"></ul>
-        <button type="button" class="roll-button" id="btnReplay">Ride it again</button>
-        <button type="button" class="back-chip block" id="btnHome">Back to tickets</button>
+        <button type="button" class="roll-button" id="btnReplay">ride again</button>
+        <button type="button" class="soft-chip block" id="btnHome">back to tickets</button>
       </section>
     </main>
   </div>
-  <script src="src/app.js?v=20260706c" type="module"></script>
+  <script src="src/app.js?v=20260706d" type="module"></script>
 </body>
 </html>

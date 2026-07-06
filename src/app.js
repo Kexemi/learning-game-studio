@@ -1,23 +1,32 @@
-const STORAGE_KEY = "mechanism-run-v3";
-const EXPERIENCE_MARKER = "story-on-wheels";
+const STORAGE_KEY = "mechanism-run-v4";
+const EXPERIENCE_MARKER = "continuous-directed-animation";
+const TIMING = {
+  homeArrival: 1200,
+  sceneTravel: 760,
+  sceneReveal: 520,
+  outcomeBeat: 360,
+};
 
 const els = {
   app: document.getElementById("app"),
   deckList: document.getElementById("deckList"),
   loadHint: document.getElementById("loadHint"),
+  homeGuide: document.getElementById("homeGuide"),
+  homeSettlePanel: document.getElementById("homeSettlePanel"),
   viewHome: document.getElementById("viewHome"),
   viewRun: document.getElementById("viewRun"),
   viewSummary: document.getElementById("viewSummary"),
   runArena: document.getElementById("runArena"),
   runTitle: document.getElementById("runTitle"),
   runMap: document.getElementById("runMap"),
-  storyStage: document.getElementById("storyStage"),
-  sceneCard: document.getElementById("sceneCard"),
+  directorStage: document.getElementById("directorStage"),
+  directorLine: document.getElementById("directorLine"),
+  directorCaption: document.getElementById("directorCaption"),
   storyCounter: document.getElementById("storyCounter"),
-  narratorLine: document.getElementById("narratorLine"),
+  interactionWindow: document.getElementById("interactionWindow"),
+  interactionCue: document.getElementById("interactionCue"),
   enemyAvatar: document.getElementById("enemyAvatar"),
   enemyName: document.getElementById("enemyName"),
-  comboText: document.getElementById("comboText"),
   playerHpText: document.getElementById("playerHpText"),
   bossHpText: document.getElementById("bossHpText"),
   threatPill: document.getElementById("threatPill"),
@@ -42,20 +51,20 @@ const els = {
 const state = {
   manifest: null,
   packs: new Map(),
-  run: null,
   progress: loadProgress(),
+  run: null,
+  timers: [],
 };
 
 const worlds = [
-  { key: "privacy", icon: "◇", name: "Whisper Fox", place: "Privacy Tunnel", line: "It whispers that finite capacity means zero risk." },
-  { key: "capacity", icon: "◈", name: "Hydra of Units", place: "Capacity Bridge", line: "It grows heads whenever the units get sloppy." },
-  { key: "scaling", icon: "⬡", name: "Scale Moth", place: "Scaling Lights", line: "It is drawn to bigger numbers without asking what changed." },
-  { key: "generalization", icon: "△", name: "Mirage Cart", place: "Generalization Dunes", line: "It blurs copying and understanding into one haze." },
-  { key: "interconnect", icon: "⌁", name: "Latency Serpent", place: "Interconnect Switchyard", line: "It punishes any move that ignores the bottleneck." },
-  { key: "evidence", icon: "✦", name: "Proof Owl", place: "Evidence Orchard", line: "It demands the claim, the proof, and the counterexample." },
+  { key: "privacy", icon: "◇", name: "Whisper Fox", place: "Privacy Tunnel", travel: "The tunnel whispers easy certainty. The guide slows the wheel until risk is visible." },
+  { key: "capacity", icon: "◈", name: "Hydra of Units", place: "Capacity Bridge", travel: "Numbers rise like bridge towers. The wheel waits for the units to line up." },
+  { key: "scaling", icon: "⬡", name: "Scale Moth", place: "Scaling Lights", travel: "Bright scaling lights rush past. The guide asks what the bigger model actually buys." },
+  { key: "generalization", icon: "△", name: "Mirage Cart", place: "Generalization Dunes", travel: "The dunes shimmer between copying and understanding. The wheel settles at the boundary." },
+  { key: "interconnect", icon: "⌁", name: "Latency Serpent", place: "Interconnect Switchyard", travel: "Switches spark under the track. The wheel listens for the bottleneck." },
+  { key: "evidence", icon: "✦", name: "Proof Owl", place: "Evidence Orchard", travel: "Branches open into claims and counterclaims. The guide waits for proof." },
 ];
-
-const steerLabels = ["lean left", "jump track", "cut the light", "hold the wheel"];
+const steerLabels = ["steer gently", "cut across", "hold steady", "jump the rail"];
 
 function loadProgress() {
   try {
@@ -65,17 +74,21 @@ function loadProgress() {
     return { completed: {} };
   }
 }
-
-function saveProgress() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.progress));
+function saveProgress() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.progress)); }
+function setTimer(fn, ms) {
+  const id = setTimeout(fn, ms);
+  state.timers.push(id);
+  return id;
 }
-
+function clearDirectorTimers() {
+  state.timers.forEach((id) => clearTimeout(id));
+  state.timers = [];
+}
 async function fetchJson(path) {
   const res = await fetch(path, { cache: "no-store" });
   if (!res.ok) throw new Error(`Failed to load ${path}: ${res.status}`);
   return res.json();
 }
-
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -84,7 +97,6 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
-
 function showView(name) {
   els.app.dataset.screen = name;
   for (const section of [els.viewHome, els.viewRun, els.viewSummary]) {
@@ -92,26 +104,35 @@ function showView(name) {
     section.hidden = !active;
     section.classList.toggle("screen-active", active);
   }
-  requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "instant" }));
 }
-
 function profileLabel(profile) {
   return {
-    "boss-fight": "boss road",
-    "myth-bust": "myth road",
-    "build-room": "build road",
-    "failure-lab": "failure road",
-    "map-expedition": "map road",
-    courtroom: "proof road",
-  }[profile] || "story road";
+    "boss-fight": "boss ride",
+    "myth-bust": "myth ride",
+    "build-room": "build ride",
+    "failure-lab": "failure ride",
+    "map-expedition": "map ride",
+    courtroom: "proof ride",
+  }[profile] || "story ride";
 }
-
+function startOpeningDirector() {
+  els.app.dataset.homePhase = "arrival";
+  els.homeGuide.textContent = "The ride is arriving. Watch the source turn into a moving path.";
+  setTimer(() => {
+    els.app.dataset.homePhase = "settling";
+    els.homeGuide.textContent = "The guide is slowing the world so you can choose.";
+  }, Math.floor(TIMING.homeArrival * 0.58));
+  setTimer(() => {
+    els.app.dataset.homePhase = "choose";
+    els.homeGuide.textContent = "Now: tap the glowing ticket when you are ready to board.";
+  }, TIMING.homeArrival);
+}
 function renderDeckList() {
   els.deckList.innerHTML = "";
   const packs = state.manifest?.packs || [];
   if (!packs.length) {
     els.loadHint.hidden = false;
-    els.loadHint.textContent = "No story runs yet.";
+    els.loadHint.textContent = "No rides yet.";
     return;
   }
   els.loadHint.hidden = true;
@@ -120,47 +141,42 @@ function renderDeckList() {
     const best = state.progress.completed?.[entry.pack_id];
     const ticket = document.createElement("button");
     ticket.type = "button";
-    ticket.className = "story-ticket";
-    ticket.style.setProperty("--delay", `${index * 0.08}s`);
+    ticket.className = "guided-ticket";
+    ticket.style.setProperty("--delay", `${0.18 + index * 0.08}s`);
     ticket.setAttribute("role", "listitem");
     ticket.innerHTML = `
-      <span class="ticket-punch"></span>
-      <span class="ticket-route">${escapeHtml(profileLabel(entry.forge_profile || pack?.forge_profile))}</span>
+      <span class="ticket-light"></span>
+      <span class="ticket-type">${escapeHtml(profileLabel(entry.forge_profile || pack?.forge_profile))}</span>
       <strong>${escapeHtml(entry.title || pack?.title || entry.pack_id)}</strong>
-      <small>${pack?.questions?.length || 0} scenes · ${best ? `best ${best.rank}` : "new ride"}</small>
-      <span class="ticket-ride">ride →</span>
+      <small>${pack?.questions?.length || 0} guided scenes · ${best ? `best ${best.rank}` : "unridden"}</small>
     `;
-    ticket.addEventListener("click", () => startRun(entry.pack_id));
+    ticket.addEventListener("click", () => {
+      if (els.app.dataset.homePhase !== "choose") return;
+      startRun(entry.pack_id);
+    });
     els.deckList.appendChild(ticket);
   });
 }
-
 function pickWorld(question, index) {
-  const tags = (question.mechanism_tags || []).map((t) => String(t).toLowerCase());
-  const found = worlds.find((world) => tags.some((tag) => tag.includes(world.key)));
-  return found || worlds[index % worlds.length];
+  const tags = (question.mechanism_tags || []).map((tag) => String(tag).toLowerCase());
+  return worlds.find((world) => tags.some((tag) => tag.includes(world.key))) || worlds[index % worlds.length];
 }
-
 function buildScenes(pack) {
   return pack.questions.map((q, index) => {
     const world = pickWorld(q, index);
-    const hit = 9 + Math.min(10, (q.mechanism_tags || []).length * 2) + (q.transfer_type === "no_hint" ? 9 : 0) + Math.floor(index / 2);
     return {
       id: q.id,
-      q,
       index,
+      q,
       world,
-      hit,
+      hit: 8 + Math.min(10, (q.mechanism_tags || []).length * 2) + (q.transfer_type === "no_hint" ? 8 : 0),
       state: "locked",
-      mood: q.transfer_type === "no_hint" ? "storm" : index % 2 ? "glow" : "ready",
-      narration: q.transfer_type === "no_hint"
-        ? `${world.place}. No hint lights. The wheel only moves if you really know the mechanism.`
-        : `${world.place}. ${world.line}`,
     };
   });
 }
-
+function pct(value, max) { return Math.max(0, Math.min(100, Math.round((value / max) * 100))); }
 function startRun(packId) {
+  clearDirectorTimers();
   const pack = state.packs.get(packId);
   if (!pack) return;
   const manifestEntry = state.manifest.packs.find((entry) => entry.pack_id === packId) || {};
@@ -172,116 +188,118 @@ function startRun(packId) {
     scenes,
     index: 0,
     hp: 100,
-    threatMax: Math.max(80, scenes.length * 18),
-    threat: Math.max(80, scenes.length * 18),
+    staticMax: Math.max(90, scenes.length * 18),
+    static: Math.max(90, scenes.length * 18),
     combo: 0,
     bestCombo: 0,
     correct: 0,
-    answered: false,
+    phase: "travel",
     answers: [],
   };
-  els.runArena.textContent = manifestEntry.arena || pack.game_hooks?.arena || "Story rail";
+  els.runArena.textContent = manifestEntry.arena || pack.game_hooks?.arena || "guided rail";
   els.runTitle.textContent = pack.title;
-  els.feedback.hidden = true;
   showView("run");
-  renderScene();
+  beginSceneDirector();
 }
-
-function pct(value, max) {
-  return Math.max(0, Math.min(100, Math.round((value / max) * 100)));
-}
-
-function renderProgress() {
+function renderSceneStrip() {
   const run = state.run;
   els.runMap.innerHTML = "";
   run.scenes.forEach((scene, index) => {
-    const node = document.createElement("span");
-    node.className = "story-node";
-    node.dataset.state = index === run.index ? "current" : scene.state;
-    node.textContent = index + 1;
-    els.runMap.appendChild(node);
+    const dot = document.createElement("span");
+    dot.className = "scene-dot";
+    dot.dataset.state = index === run.index ? "current" : scene.state;
+    els.runMap.appendChild(dot);
   });
 }
-
 function renderMeters() {
   const run = state.run;
-  els.playerHpText.textContent = `♥ ${run.hp}`;
-  els.bossHpText.textContent = `threat ${run.threat}`;
-  els.comboText.textContent = `wheel x${run.combo}`;
+  els.playerHpText.textContent = `heart ${run.hp}`;
+  els.bossHpText.textContent = `static ${run.static}`;
   els.app.style.setProperty("--hp", `${pct(run.hp, 100)}%`);
-  els.app.style.setProperty("--threat", `${pct(run.threat, run.threatMax)}%`);
+  els.app.style.setProperty("--static", `${pct(run.static, run.staticMax)}%`);
 }
-
-function renderScene() {
+function setRunPhase(phase, line, cue) {
   const run = state.run;
-  const scene = run.scenes[run.index];
+  if (!run) return;
+  run.phase = phase;
+  els.directorStage.dataset.phase = phase;
+  els.interactionWindow.dataset.ready = phase === "settled" ? "true" : "false";
+  els.directorLine.textContent = line;
+  els.interactionCue.textContent = cue;
+}
+function renderChoiceReel(scene) {
   const q = scene.q;
-  run.answered = false;
-  els.feedback.hidden = true;
-  els.storyStage.dataset.mood = scene.mood;
-  els.storyStage.dataset.result = "rolling";
-  els.sceneCard.classList.remove("is-hit", "is-miss");
-  els.storyCounter.textContent = `Scene ${run.index + 1} of ${run.scenes.length}`;
-  els.narratorLine.textContent = scene.narration;
-  els.enemyAvatar.textContent = scene.world.icon;
-  els.enemyName.textContent = scene.world.name;
-  els.threatPill.textContent = `if wrong: -${scene.hit} heart`;
-  els.questionStem.textContent = q.stem;
   els.choices.innerHTML = "";
   q.choices.forEach((choice, i) => {
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "steer-choice";
-    button.setAttribute("role", "listitem");
+    button.className = "steer-card";
+    button.disabled = true;
     button.innerHTML = `<span>${escapeHtml(steerLabels[i] || "steer")}</span><strong>${escapeHtml(choice)}</strong>`;
     button.addEventListener("click", () => answerScene(i, button));
     els.choices.appendChild(button);
   });
-  renderProgress();
-  renderMeters();
 }
-
+function beginSceneDirector() {
+  clearDirectorTimers();
+  const run = state.run;
+  const scene = run.scenes[run.index];
+  const q = scene.q;
+  els.feedback.hidden = true;
+  els.directorStage.dataset.result = "none";
+  els.enemyAvatar.textContent = scene.world.icon;
+  els.enemyName.textContent = scene.world.name;
+  els.storyCounter.textContent = `scene ${run.index + 1} / ${run.scenes.length}`;
+  els.questionStem.textContent = q.stem;
+  els.threatPill.textContent = q.transfer_type === "no_hint" ? "no hint lights" : scene.world.place;
+  renderChoiceReel(scene);
+  renderSceneStrip();
+  renderMeters();
+  setRunPhase("travel", scene.world.travel, "Stay with the ride. The question is still moving.");
+  setTimer(() => {
+    setRunPhase("reveal", `${scene.world.name} appears. The guide is turning the moving claim into one clear choice.`, "Almost settled… watch for the quiet moment.");
+  }, TIMING.sceneTravel);
+  setTimer(() => {
+    setRunPhase("settled", "The world has slowed. Choose the steering move that keeps the mechanism true.", "Your turn: steer once.");
+    [...els.choices.children].forEach((button) => { button.disabled = false; });
+  }, TIMING.sceneTravel + TIMING.sceneReveal);
+}
 function answerScene(choiceIndex, button) {
   const run = state.run;
-  if (!run || run.answered) return;
+  if (!run || run.phase !== "settled") return;
   const scene = run.scenes[run.index];
   const q = scene.q;
   const correct = choiceIndex === q.correct_index;
-  run.answered = true;
-  for (const child of els.choices.children) child.disabled = true;
+  [...els.choices.children].forEach((child) => { child.disabled = true; });
   button.classList.add(correct ? "is-correct" : "is-wrong");
   const right = els.choices.children[q.correct_index];
   if (right) right.classList.add("is-correct");
-
+  setRunPhase("outcome", "The ride reacts to your steering…", "Watch the result, then roll onward.");
   if (correct) {
-    const damage = Math.min(run.threat, 16 + run.combo * 6 + (q.transfer_type === "no_hint" ? 8 : 0));
-    run.threat -= damage;
+    const damage = Math.min(run.static, 16 + run.combo * 5 + (q.transfer_type === "no_hint" ? 8 : 0));
+    run.static -= damage;
     run.combo += 1;
     run.bestCombo = Math.max(run.bestCombo, run.combo);
     run.correct += 1;
     run.hp = Math.min(100, run.hp + 2);
     scene.state = "cleared";
-    els.feedbackVerdict.textContent = `The wheel catches — ${damage} threat falls away.`;
-    els.storyStage.dataset.result = "hit";
-    els.sceneCard.classList.add("is-hit");
+    els.directorStage.dataset.result = "clear";
+    els.feedbackVerdict.textContent = `The wheel catches. Static drops by ${damage}.`;
   } else {
     run.hp = Math.max(1, run.hp - scene.hit);
     run.combo = 0;
     scene.state = "wounded";
-    els.feedbackVerdict.textContent = `${scene.world.name} shakes the rail. The wheel wobbles.`;
-    els.storyStage.dataset.result = "miss";
-    els.sceneCard.classList.add("is-miss");
+    els.directorStage.dataset.result = "wobble";
+    els.feedbackVerdict.textContent = `${scene.world.name} shakes the track. Heart drops by ${scene.hit}.`;
   }
-
-  run.answers.push({ id: q.id, correct, hp: run.hp, threat: run.threat });
+  run.answers.push({ id: q.id, correct, hp: run.hp, static: run.static });
   els.feedbackBody.textContent = q.explanation;
   els.sourceLine.textContent = `Source: ${q.source_anchor || "source anchor missing"}`;
-  els.btnNext.textContent = run.index + 1 >= run.scenes.length ? "finish the ride" : "roll to next scene";
-  els.feedback.hidden = false;
-  renderProgress();
+  els.btnNext.textContent = run.index + 1 >= run.scenes.length ? "finish the ride" : "roll onward";
+  renderSceneStrip();
   renderMeters();
+  setTimer(() => { els.feedback.hidden = false; }, TIMING.outcomeBeat);
 }
-
 function rankRun(score, hp, bestCombo) {
   if (score === 100 && hp >= 75) return "S";
   if (score >= 85) return "A";
@@ -289,27 +307,26 @@ function rankRun(score, hp, bestCombo) {
   if (score >= 50) return "C";
   return "D";
 }
-
 function finishRun() {
+  clearDirectorTimers();
   const run = state.run;
   const total = run.scenes.length;
   const score = Math.round((run.correct / total) * 100);
   const rank = rankRun(score, run.hp, run.bestCombo);
-  const reward = run.manifestEntry.reward_skin || run.pack.game_hooks?.reward_skin || "Story token";
+  const reward = run.manifestEntry.reward_skin || run.pack.game_hooks?.reward_skin || "Mechanism token";
   state.progress.completed[run.pack.pack_id] = { score, rank, hp: run.hp, bestCombo: run.bestCombo, at: Date.now() };
   saveProgress();
   renderDeckList();
-
-  els.summaryTitle.textContent = score >= 70 ? "The ride breaks through." : "The ride makes it home.";
+  els.summaryTitle.textContent = score >= 70 ? "The source becomes a road." : "The ride returns with sparks.";
   els.summaryScore.textContent = `${run.correct}/${total} scenes held · rank ${rank} · heart ${run.hp}`;
   els.masteryFill.style.width = `${score}%`;
   els.summaryReward.textContent = score >= 70
-    ? `Unlocked: ${reward}. The source now feels like a road you can ride, not a page you skimmed.`
-    : `Replay this route. The scenes are short; the second ride is where the mechanism starts to stick.`;
+    ? `Unlocked: ${reward}. You did not read a page; you moved through the idea and steered it.`
+    : "The guide marks the weak scenes. Ride again when the motion calls.";
   els.resultGrid.innerHTML = `
     <div><span>${rank}</span><small>rank</small></div>
     <div><span>${run.bestCombo}</span><small>best wheel</small></div>
-    <div><span>${run.threat}</span><small>threat left</small></div>
+    <div><span>${run.static}</span><small>static left</small></div>
   `;
   els.summaryTags.innerHTML = "";
   const tags = new Set();
@@ -321,7 +338,6 @@ function finishRun() {
   }
   showView("summary");
 }
-
 async function boot() {
   try {
     state.manifest = await fetchJson("content/pack-manifest.json");
@@ -329,51 +345,71 @@ async function boot() {
       state.packs.set(entry.pack_id, await fetchJson(entry.path));
     }
     renderDeckList();
+    startOpeningDirector();
   } catch (err) {
     els.loadHint.hidden = false;
-    els.loadHint.textContent = `Could not load story runs: ${err.message}`;
+    els.loadHint.textContent = `Could not load rides: ${err.message}`;
   }
 }
 
 els.btnNext.addEventListener("click", () => {
   if (!state.run) return;
-  if (state.run.index + 1 >= state.run.scenes.length) {
-    finishRun();
-    return;
+  if (state.run.index + 1 >= state.run.scenes.length) finishRun();
+  else {
+    state.run.index += 1;
+    beginSceneDirector();
   }
-  state.run.index += 1;
-  renderScene();
 });
-els.btnExitRun.addEventListener("click", () => showView("home"));
+els.btnExitRun.addEventListener("click", () => { clearDirectorTimers(); showView("home"); startOpeningDirector(); });
 els.btnReplay.addEventListener("click", () => state.run && startRun(state.run.packId));
-els.btnHome.addEventListener("click", () => showView("home"));
+els.btnHome.addEventListener("click", () => { showView("home"); startOpeningDirector(); });
 
 window.__MECHANISM_RUN_DEBUG__ = {
+  marker: EXPERIENCE_MARKER,
   state,
+  forceHomeSettled() {
+    clearDirectorTimers();
+    els.app.dataset.homePhase = "choose";
+    els.homeGuide.textContent = "Now: tap the glowing ticket when you are ready to board.";
+  },
+  forceSceneSettled() {
+    if (!state.run) return;
+    clearDirectorTimers();
+    setRunPhase("settled", "The world has slowed. Choose the steering move that keeps the mechanism true.", "Your turn: steer once.");
+    [...els.choices.children].forEach((button) => { button.disabled = false; });
+  },
   snapshot() {
     const run = state.run;
     return run ? {
+      marker: EXPERIENCE_MARKER,
       screen: els.app.dataset.screen,
+      homePhase: els.app.dataset.homePhase,
+      phase: run.phase,
       hp: run.hp,
-      threat: run.threat,
+      static: run.static,
       combo: run.combo,
       scene: run.index,
-      answered: run.answered,
       answers: run.answers.length,
-      hasStoryStage: !!document.querySelector(".story-stage"),
-      hasWheel: !!document.querySelector(".traveler-wheel"),
-      hasTickets: document.querySelectorAll(".story-ticket").length,
+      choicesEnabled: [...els.choices.children].some((button) => !button.disabled),
+      feedbackVisible: !els.feedback.hidden,
+      hasDirectorStage: !!document.querySelector(".director-stage"),
+      hasMotionLayers: !!document.querySelector(".ambient-motion .aurora"),
+      hasGuidance: !!els.directorLine.textContent,
     } : {
+      marker: EXPERIENCE_MARKER,
       screen: els.app.dataset.screen,
+      homePhase: els.app.dataset.homePhase,
+      phase: null,
       hp: null,
-      threat: null,
+      static: null,
       combo: 0,
       scene: null,
-      answered: false,
       answers: 0,
-      hasStoryStage: !!document.querySelector(".story-stage"),
-      hasWheel: !!document.querySelector(".traveler-wheel"),
-      hasTickets: document.querySelectorAll(".story-ticket").length,
+      choicesEnabled: false,
+      feedbackVisible: false,
+      hasDirectorStage: !!document.querySelector(".director-stage"),
+      hasMotionLayers: !!document.querySelector(".ambient-motion .aurora"),
+      hasGuidance: !!els.homeGuide.textContent,
     };
   },
 };

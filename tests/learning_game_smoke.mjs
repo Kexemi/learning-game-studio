@@ -1,7 +1,6 @@
 /**
- * Headless smoke: verify the game feels like an animated story on wheels,
- * not a web-page/card quiz. Starts a local server, drives system Chrome via CDP,
- * captures a short-phone screenshot, and checks story-stage mechanics.
+ * Headless smoke: the app must behave like a continuous directed animation.
+ * It should move and guide from first paint, then settle only at interaction windows.
  */
 import http from "node:http";
 import { spawn } from "node:child_process";
@@ -12,10 +11,10 @@ import path from "node:path";
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(ROOT, "..");
-const PORT = Number(process.env.LGS_PORT || 8765);
-const DEBUG_PORT = Number(process.env.LGS_DEBUG_PORT || 9227);
+const PORT = Number(process.env.LGS_PORT || 8786);
+const DEBUG_PORT = Number(process.env.LGS_DEBUG_PORT || 9231);
 const BASE = `http://127.0.0.1:${PORT}`;
-const ARTIFACT_DIR = path.join(REPO, "artifacts", "learning-game-v3");
+const ARTIFACT_DIR = path.join(REPO, "artifacts", "learning-game-v4");
 const CHROME_PATHS = [
   "C:/Program Files/Google/Chrome/Application/chrome.exe",
   "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe",
@@ -98,26 +97,47 @@ async function waitForExpr(cdp, expression, ms = 10000) {
   throw new Error(`waitForExpr timeout: ${expression}`);
 }
 
+async function screenshot(cdp, name) {
+  mkdirSync(ARTIFACT_DIR, { recursive: true });
+  const shot = await cdp.send("Page.captureScreenshot", { format: "png", captureBeyondViewport: false });
+  const out = path.join(ARTIFACT_DIR, name);
+  writeFileSync(out, Buffer.from(shot.data, "base64"));
+  return out;
+}
+
+async function fetchText(url) {
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error(`fetch ${url} ${res.status}`);
+  return res.text();
+}
+
 async function runStaticContract() {
   const [manifest, appJs, html, css] = await Promise.all([
-    fetch(`${BASE}/content/pack-manifest.json`).then((r) => r.text()),
-    fetch(`${BASE}/src/app.js?v=20260706c`).then((r) => r.text()),
-    fetch(`${BASE}/index.html`).then((r) => r.text()),
-    fetch(`${BASE}/src/styles.css?v=20260706c`).then((r) => r.text()),
+    fetchText(`${BASE}/content/pack-manifest.json`),
+    fetchText(`${BASE}/src/app.js?v=20260706d`),
+    fetchText(`${BASE}/index.html`),
+    fetchText(`${BASE}/src/styles.css?v=20260706d`),
   ]);
   const required = [
     [manifest, "nvidiaai-llm-memorization-capacity-20260706", "manifest contains current deck"],
-    [html, "story-stage", "story stage present"],
-    [html, "traveler-wheel", "traveler wheel present"],
-    [html, "ticket-dock", "ticket dock present"],
-    [html, "narrator-bubble", "narrator bubble present"],
-    [appJs, "story-ticket", "story ticket renderer present"],
-    [appJs, "buildScenes", "scene builder present"],
-    [appJs, "story-on-wheels", "story-on-wheels marker absent"],
-    [appJs, "__MECHANISM_RUN_DEBUG__", "debug snapshot exposed"],
-    [css, "@keyframes wheelSpin", "wheel animation present"],
-    [css, ".story-stage", "story-stage CSS present"],
-    [css, ".story-ticket", "ticket CSS present"],
+    [html, "opening-cinematic", "opening cinematic present"],
+    [html, "settle-panel", "settle panel present"],
+    [html, "ticket-rail", "ticket rail present"],
+    [html, "director-stage", "director stage present"],
+    [html, "interaction-window", "interaction window present"],
+    [html, "src/app.js?v=20260706d", "index points at v4 JS"],
+    [html, "src/styles.css?v=20260706d", "index points at v4 CSS"],
+    [appJs, "continuous-directed-animation", "directed-animation marker present"],
+    [appJs, "TIMING", "director timing present"],
+    [appJs, "forceHomeSettled", "home settle test hook present"],
+    [appJs, "forceSceneSettled", "scene settle test hook present"],
+    [appJs, "setRunPhase", "phase director present"],
+    [appJs, "button.disabled = true", "choices disabled outside interaction window"],
+    [css, "@keyframes curtainOpen", "opening curtain animation present"],
+    [css, "@keyframes trackRush", "track motion animation present"],
+    [css, ".director-stage[data-phase=\"travel\"]", "travel phase CSS present"],
+    [css, ".director-stage[data-phase=\"settled\"]", "settled phase CSS present"],
+    [css, ".interaction-window[data-ready=\"false\"]", "non-interaction window muted"],
   ];
   for (const [haystack, needle, label] of required) {
     if (!haystack.includes(needle)) throw new Error(`static contract failed: ${label}`);
@@ -135,7 +155,7 @@ async function runSmoke() {
 
     const chrome = CHROME_PATHS.find((p) => existsSync(p));
     if (!chrome || typeof WebSocket === "undefined") {
-      console.log("LEARNING_GAME_SMOKE_PASS static-story-contract");
+      console.log("LEARNING_GAME_SMOKE_PASS static-continuous-directed-animation");
       return;
     }
 
@@ -159,40 +179,58 @@ async function runSmoke() {
     await cdp.send("Emulation.setDeviceMetricsOverride", { width: 390, height: 665, deviceScaleFactor: 2, mobile: true });
     await cdp.send("Page.navigate", { url: `${BASE}/index.html` });
     await waitForExpr(cdp, "document.readyState === 'complete'");
-    await waitForExpr(cdp, "document.querySelectorAll('.story-ticket').length >= 1");
+    await waitForExpr(cdp, "window.__MECHANISM_RUN_DEBUG__ && document.querySelectorAll('.guided-ticket').length >= 1");
 
-    await evalExpr(cdp, "document.querySelector('.story-ticket').click(); true");
-    await waitForExpr(cdp, "document.querySelector('.story-stage') && document.querySelectorAll('.steer-choice').length >= 2");
-    const before = await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot()");
-    if (before.screen !== "run" || before.hp !== 100 || !before.hasWheel || !before.hasStoryStage) throw new Error(`bad initial story snapshot ${JSON.stringify(before)}`);
-
-    await evalExpr(cdp, "document.querySelector('.steer-choice').click(); true");
-    await waitForExpr(cdp, "!document.getElementById('feedback').hidden");
-    const after = await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot()");
-    if (after.answers !== 1 || !after.answered) throw new Error(`answer did not resolve story scene ${JSON.stringify(after)}`);
-
-    const mechanics = await evalExpr(cdp, `({
-      tickets: document.querySelectorAll('.story-ticket').length,
-      nodes: document.querySelectorAll('.story-node').length,
-      wheel: !!document.querySelector('.traveler-wheel'),
-      puppet: !!document.querySelector('.villain-puppet'),
-      narrator: document.getElementById('narratorLine').textContent,
-      result: document.getElementById('feedbackVerdict').textContent,
-      overflowX: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-      stageHeight: Math.round(document.querySelector('.story-stage').getBoundingClientRect().height),
-    })`);
-    if (mechanics.tickets < 1 || mechanics.nodes < 3 || !mechanics.wheel || !mechanics.puppet || !mechanics.narrator || !mechanics.result) {
-      throw new Error(`story mechanics contract failed ${JSON.stringify(mechanics)}`);
+    const opening = await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot()");
+    if (opening.marker !== "continuous-directed-animation" || opening.screen !== "home" || !opening.hasMotionLayers || !opening.hasGuidance) {
+      throw new Error(`bad opening snapshot ${JSON.stringify(opening)}`);
     }
-    if (mechanics.overflowX > 1) throw new Error(`horizontal overflow ${mechanics.overflowX}`);
-    if (mechanics.stageHeight < 320) throw new Error(`story stage too small ${mechanics.stageHeight}`);
+    await screenshot(cdp, "phone-opening-cinematic.png");
 
-    mkdirSync(ARTIFACT_DIR, { recursive: true });
-    const shot = await cdp.send("Page.captureScreenshot", { format: "png", captureBeyondViewport: false });
-    const screenshot = path.join(ARTIFACT_DIR, "phone-story-wheel.png");
-    writeFileSync(screenshot, Buffer.from(shot.data, "base64"));
-    console.log("LEARNING_GAME_SMOKE_PASS story-on-wheels");
-    console.log(`LEARNING_GAME_SCREENSHOT ${screenshot}`);
+    await evalExpr(cdp, "document.getElementById('app').dataset.homePhase = 'arrival'; document.querySelector('.guided-ticket').click(); window.__MECHANISM_RUN_DEBUG__.snapshot()");
+    const rejectedEarlyTap = await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot()");
+    if (rejectedEarlyTap.screen !== "home") throw new Error(`ticket accepted before director settled ${JSON.stringify(rejectedEarlyTap)}`);
+
+    await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.forceHomeSettled(); document.querySelector('.guided-ticket').click(); true");
+    await waitForExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot().screen === 'run'");
+    const travel = await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot()");
+    if (travel.phase !== "travel" || travel.choicesEnabled) throw new Error(`travel phase should not accept input ${JSON.stringify(travel)}`);
+    await screenshot(cdp, "phone-ride-travel.png");
+
+    await evalExpr(cdp, "document.querySelector('.steer-card').click(); true");
+    const ignoredTravelTap = await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot()");
+    if (ignoredTravelTap.answers !== 0) throw new Error(`choice accepted while still traveling ${JSON.stringify(ignoredTravelTap)}`);
+
+    await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.forceSceneSettled(); true");
+    await waitForExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot().choicesEnabled === true");
+    const settled = await evalExpr(cdp, `({
+      ...window.__MECHANISM_RUN_DEBUG__.snapshot(),
+      stageHeight: Math.round(document.querySelector('.director-stage').getBoundingClientRect().height),
+      frameWidth: Math.round(document.querySelector('.experience-frame').getBoundingClientRect().width),
+      viewportWidth: window.innerWidth,
+      bodyOverflowX: getComputedStyle(document.body).overflowX,
+      guideText: document.getElementById('directorLine').textContent,
+      cueText: document.getElementById('interactionCue').textContent,
+      enabledChoices: [...document.querySelectorAll('.steer-card')].filter((button) => !button.disabled).length,
+    })`);
+    if (settled.phase !== "settled" || settled.enabledChoices < 2 || !settled.guideText || !settled.cueText) {
+      throw new Error(`settled interaction window failed ${JSON.stringify(settled)}`);
+    }
+    if (settled.stageHeight < 260) throw new Error(`director stage too small ${settled.stageHeight}`);
+    if (settled.frameWidth > settled.viewportWidth + 1) throw new Error(`experience frame overflow ${JSON.stringify(settled)}`);
+    const primaryScreenshot = await screenshot(cdp, "phone-directed-experience.png");
+
+    await evalExpr(cdp, "document.querySelector('.steer-card').click(); true");
+    await waitForExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot().feedbackVisible === true");
+    const outcome = await evalExpr(cdp, "window.__MECHANISM_RUN_DEBUG__.snapshot()");
+    if (outcome.phase !== "outcome" || outcome.answers !== 1 || !outcome.feedbackVisible) {
+      throw new Error(`outcome did not animate then explain ${JSON.stringify(outcome)}`);
+    }
+    const outcomeScreenshot = await screenshot(cdp, "phone-outcome-scroll.png");
+
+    console.log("LEARNING_GAME_SMOKE_PASS continuous-directed-animation");
+    console.log(`LEARNING_GAME_SCREENSHOT ${primaryScreenshot}`);
+    console.log(`LEARNING_GAME_SCREENSHOT_OUTCOME ${outcomeScreenshot}`);
   } finally {
     if (cdp) cdp.close();
     if (chromeProc) chromeProc.kill("SIGTERM");
