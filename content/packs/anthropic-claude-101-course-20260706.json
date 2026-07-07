@@ -1,0 +1,149 @@
+{
+  "pack_id": "anthropic-claude-101-course-20260706",
+  "title": "Claude 101: course map and work surfaces",
+  "source_intake": "https://share.google/fwLiu3cvB0HZoJC0H → https://anthropic.skilljar.com/claude-101?next=%2Fclaude-101%2F383398",
+  "grounding_status": "PARTIAL",
+  "sources": [
+    {
+      "type": "url",
+      "ref": "https://share.google/fwLiu3cvB0HZoJC0H",
+      "notes": "Resolved in-session to Anthropic Academy / Skilljar course page for Claude 101. Public landing page was reachable through terminal fetch; Firecrawl web tools were unavailable."
+    },
+    {
+      "type": "url",
+      "ref": "https://anthropic.skilljar.com/claude-101?next=%2Fclaude-101%2F383398",
+      "notes": "Visible public page states: title 'Claude 101'; description 'Learn how to use Claude for everyday work tasks, understand core features, and explore resources for more advanced learning on other topics'; curriculum lesson titles from Meet Claude through certificate; Data and Privacy FAQ about Skilljar data collection, account separation, security, and deletion email. Full lesson content appears gated behind free registration, so mechanism claims are based on page structure and public copy only."
+    }
+  ],
+  "difficulty_band": "trainee",
+  "forge_profile": "map-expedition",
+  "game_hooks": {
+    "arena": "Academy Map",
+    "reward_skin": "Claude Compass",
+    "tone": "Navigate the course by choosing the right Claude work surface and privacy expectation."
+  },
+  "questions": [
+    {
+      "id": "q1",
+      "stem": "The Claude 101 landing page says the course teaches Claude for everyday work tasks, core features, and resources for advanced learning. What is the best expectation to set before starting it?",
+      "choices": [
+        "It is an orientation map for using Claude at work, not a deep API or model-training course.",
+        "It is mainly a certification exam about building Claude from scratch.",
+        "It is only a privacy-policy page for Skilljar accounts.",
+        "It is a course about replacing all workplace tools with one prompt."
+      ],
+      "correct_index": 0,
+      "explanation": "The public description frames the course around everyday work tasks, core features, and next resources. That makes it a practical orientation, not an advanced technical build course or a privacy-only document.",
+      "mechanism_tags": ["course-framing", "expectation-setting", "claude-workflows"],
+      "source_anchor": "Visible course description: 'Learn how to use Claude for everyday work tasks, understand core features, and explore resources for more advanced learning on other topics.'",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q2",
+      "stem": "A teammate opens Claude 101 and wants to jump straight into advanced workflows. Based on the curriculum order, which foundation should they pass through first?",
+      "choices": [
+        "Meet Claude: what Claude is, a first conversation, and getting better results.",
+        "Conclusion and certificate, because credentials teach the tool automatically.",
+        "Enterprise search, because every personal user needs it before chatting.",
+        "Data deletion, because privacy support is the same thing as workflow mastery."
+      ],
+      "correct_index": 0,
+      "explanation": "The visible curriculum starts with 'Meet Claude' and lessons on what Claude is, the first conversation, and getting better results before moving into desktop, projects, artifacts, skills, and connected tools.",
+      "mechanism_tags": ["learning-sequence", "foundation-before-advanced", "course-map"],
+      "source_anchor": "Curriculum list: 'Meet Claude' → 'What is Claude?' → 'Your first conversation with Claude' → 'Getting better results.'",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q3",
+      "stem": "The curriculum has a cluster called 'Organizing your work and knowledge.' Which trio from the public lesson list belongs to that cluster?",
+      "choices": [
+        "Introduction to projects, Creating with artifacts, Working with skills.",
+        "Skilljar security, data deletion, SOC 2 compliance.",
+        "Certificate, copyright notice, powered-by footer.",
+        "Rate limits, activation codes, and sign-in errors."
+      ],
+      "correct_index": 0,
+      "explanation": "The visible page places projects, artifacts, and skills immediately after 'Organizing your work and knowledge,' which signals that these are the work-organization surfaces the course introduces.",
+      "mechanism_tags": ["projects", "artifacts", "skills", "work-organization"],
+      "source_anchor": "Curriculum section: 'Organizing your work and knowledge' followed by 'Introduction to projects,' 'Creating with artifacts,' and 'Working with skills.'",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q4",
+      "stem": "A learner says, 'I need Claude to reach outside the chat and work with company context.' Which part of the course map is the most relevant starting point?",
+      "choices": [
+        "Expanding Claude's reach: connecting tools, enterprise search, and research mode.",
+        "Conclusion & certificate, because certificates connect external tools.",
+        "What is Claude?, because all external integrations are covered by a definition lesson.",
+        "The Skilljar deletion FAQ, because deleting learning data connects Claude to tools."
+      ],
+      "correct_index": 0,
+      "explanation": "The visible curriculum names a section 'Expanding Claude's reach' and places 'Connecting your tools,' 'Enterprise search,' and 'Research mode for deep dives' under it. That is the clearest map location for external/context-reaching workflows.",
+      "mechanism_tags": ["tool-connection", "enterprise-search", "research-mode", "course-map"],
+      "source_anchor": "Curriculum section: 'Expanding Claude's reach' with lessons 'Connecting your tools,' 'Enterprise search,' and 'Research mode for deep dives.'",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q5",
+      "stem": "Why is 'Putting it all together' placed after connecting tools, enterprise search, and research mode in this course map?",
+      "choices": [
+        "It likely asks the learner to combine earlier surfaces after seeing the main feature families.",
+        "It means the course skips the feature lessons and only gives a final certificate.",
+        "It proves research mode is unrelated to work tasks.",
+        "It is part of the privacy FAQ rather than the curriculum."
+      ],
+      "correct_index": 0,
+      "explanation": "From the public sequence, the course first introduces Claude, then organization surfaces, then reach/enterprise/research features, and only then 'Putting it all together.' The lesson title functions as a synthesis point in the map.",
+      "mechanism_tags": ["synthesis", "workflow-composition", "learning-architecture"],
+      "source_anchor": "Visible curriculum order: 'Research mode for deep dives' → 'Putting it all together' → 'Claude in action: use-cases by role.'",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q6",
+      "stem": "The Data and Privacy FAQ says Skilljar collects progress, lesson completion, quiz scores, and time spent. What is the most accurate privacy expectation?",
+      "choices": [
+        "Skilljar tracks learning activity for the course experience and certificates; that is separate from a Claude AI services account.",
+        "Skilljar collects no learning data at all once the course is free.",
+        "Skilljar manages all Claude AI chats and Anthropic Console access.",
+        "Quiz scores are collected only if the learner buys a paid upgrade."
+      ],
+      "correct_index": 0,
+      "explanation": "The FAQ says Skilljar collects basic learning analytics and separately explains that Skilljar course data differs from Anthropic account data. The other choices contradict the public FAQ.",
+      "mechanism_tags": ["privacy-boundary", "learning-analytics", "account-separation"],
+      "source_anchor": "Data and Privacy FAQ: Skilljar collects 'course progress, lesson completion status, quiz scores, and time spent'; Skilljar tracks course learning progress while Anthropic account manages Claude/Console access.",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q7",
+      "stem": "A learner asks whether they need an Anthropic account to access the Claude 101 learning content. What does the public FAQ say?",
+      "choices": [
+        "No; the course is hosted on Skilljar and only requires a Skilljar account for access, though Claude AI services require a separate Anthropic account.",
+        "Yes; every course lesson requires a paid Anthropic Console subscription.",
+        "No account of any kind is required, because all lessons are public without registration.",
+        "Only an enterprise administrator can register learners."
+      ],
+      "correct_index": 0,
+      "explanation": "The FAQ explicitly separates access to Skilljar-hosted learning content from later use of Claude AI services. It says the course needs a Skilljar account, not an Anthropic account, for access.",
+      "mechanism_tags": ["account-requirements", "skilljar", "anthropic-account"],
+      "source_anchor": "FAQ: 'No, you don't need an Anthropic account to access this learning content... only requires a Skilljar account... if you want to use Claude AI services... create a separate Anthropic account at claude.ai.'",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q8",
+      "stem": "NO-HINT: A team wants to onboard staff to Claude with minimal confusion. They need a training path, proof of completion, and a clear data boundary. Which plan fits the public Claude 101 page best?",
+      "choices": [
+        "Use Claude 101 on Skilljar for the learning path and certificate, explain that Skilljar tracks learning progress, and create separate Anthropic accounts only for using Claude itself.",
+        "Skip the course and ask everyone to connect enterprise search before learning basic conversations.",
+        "Treat Skilljar as the system that controls Claude chats and Console access for the company.",
+        "Tell staff that no account is needed and no learning activity is tracked."
+      ],
+      "correct_index": 0,
+      "explanation": "This combines the public page's course purpose, certificate, Skilljar learning analytics, and account separation. The distractors invert the course sequence or privacy/account details.",
+      "mechanism_tags": ["onboarding", "completion-proof", "privacy-boundary", "transfer"],
+      "source_anchor": "Transfer from public course description, curriculum/certificate line, and Data and Privacy FAQ on Skilljar tracking and separate Anthropic accounts.",
+      "transfer_type": "no_hint"
+    }
+  ],
+  "critic_notes": "Grounding is PARTIAL: the public landing page, curriculum titles, and privacy FAQ were fetched and anchored, but the full Claude 101 lesson bodies appear behind free Skilljar registration and were not accessed. The deck therefore teaches navigation, workflow-surface selection, and privacy/account boundaries rather than detailed Claude feature mechanics. Strong next improvement would be a second pack after the owner authorizes/uses course access or provides lesson text.",
+  "forge_version": "1.3.0"
+}

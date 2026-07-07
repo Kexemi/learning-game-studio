@@ -31,6 +31,16 @@
       "arena": "Sovereignty Court",
       "reward_skin": "Orbital Seal",
       "tone": "Separate legal mechanism, resilience claim, and sales claim under pressure."
+    },
+    {
+      "pack_id": "anthropic-claude-101-course-20260706",
+      "path": "content/packs/anthropic-claude-101-course-20260706.json",
+      "title": "Claude 101: course map and work surfaces",
+      "forge_profile": "map-expedition",
+      "difficulty_band": "trainee",
+      "arena": "Academy Map",
+      "reward_skin": "Claude Compass",
+      "tone": "Navigate the course by choosing the right Claude work surface and privacy expectation."
     }
   ]
 }
