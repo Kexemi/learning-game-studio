@@ -1,0 +1,164 @@
+{
+  "pack_id": "teknium-segmented-tool-batch-dispatch-20260715",
+  "title": "Segmented tool dispatch: preserve concurrency across barriers",
+  "source_intake": "https://x.com/teknium/status/2077132644979200150",
+  "grounding_status": "VERIFIED",
+  "sources": [
+    {
+      "type": "url",
+      "ref": "https://x.com/teknium/status/2077132644979200150",
+      "notes": "Direct X post and attached Segmented Tool Batch Dispatch diagram, transcribed with image understanding."
+    },
+    {
+      "type": "url",
+      "ref": "https://github.com/NousResearch/hermes-agent/commit/271a9d8ec6ada347375921a7995001b35ad89954",
+      "notes": "Exact upstream implementation commit and 400-line segmentation regression test inspected from the local remote-tracking ref."
+    }
+  ],
+  "difficulty_band": "solid",
+  "forge_profile": "failure-lab",
+  "game_hooks": {
+    "arena": "Dispatch Yard",
+    "reward_skin": "Barrier Breaker",
+    "tone": "Recover mixed-batch speed without breaking causality or result order."
+  },
+  "questions": [
+    {
+      "id": "q1",
+      "stem": "Before segmented dispatch, a batch contains three safe reads followed by one unsafe shell command. What failure does the announcement identify?",
+      "choices": [
+        "The reads run in parallel while the shell command starts at the same time",
+        "The shell command is automatically moved ahead of the reads",
+        "The one unsafe call forces every call in the mixed batch to run serially",
+        "The dispatcher drops the shell result to preserve concurrency"
+      ],
+      "correct_index": 2,
+      "explanation": "The old all-or-nothing policy serialized the whole mixed batch when any call was unsafe. Parallel reads plus a simultaneous shell would ignore the safety boundary; moving the shell would reorder emission; dropping a result would violate the one-result-per-call invariant.",
+      "mechanism_tags": ["mixed-batch", "serialization", "failure-mode"],
+      "source_anchor": "Post diagram, BEFORE: '4 units wall time - one unsafe call forced ALL calls serial'",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q2",
+      "stem": "For the emitted sequence [read A, read B, read C, shell cmd], what schedule does the new segment planner produce?",
+      "choices": [
+        "Run all four together because reads are safe",
+        "Run A/B/C concurrently, wait at a barrier, then run the shell command sequentially",
+        "Run the shell command first, then A/B/C concurrently",
+        "Run A/B together, then C/shell together"
+      ],
+      "correct_index": 1,
+      "explanation": "The planner forms a contiguous safe run from A/B/C and then a sequential barrier for the unsafe shell command. Running all four crosses the barrier; shell-first reorders calls; pairing C with the shell mixes safe and unsafe work in one concurrent segment.",
+      "mechanism_tags": ["segment-planner", "parallel-run", "barrier"],
+      "source_anchor": "Post diagram, AFTER and SEGMENT PLANNER: parallel [read A read B read C] then sequential barrier [shell cmd]",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q3",
+      "stem": "The emitted sequence is [read A, shell cmd, read B, read C]. Which execution plan preserves the announced rules while recovering available concurrency?",
+      "choices": [
+        "Run A/B/C together, then shell cmd",
+        "Run A and shell cmd together, then B/C together",
+        "Run every call serially because the batch contains a shell command",
+        "Run A as the first safe segment, shell cmd as a barrier, then B/C as a parallel safe segment"
+      ],
+      "correct_index": 3,
+      "explanation": "Contiguous safe calls form runs on each side of the unsafe barrier. B and C may overlap with each other, but neither may jump ahead of the earlier shell barrier. Grouping all reads reorders across the barrier; overlapping A with shell crosses it; full serialization is safe but forfeits the new optimization.",
+      "mechanism_tags": ["contiguous-runs", "emission-order", "causality"],
+      "source_anchor": "Post diagram: 'contiguous runs only - emission order never reordered' and 'no call starts before an earlier barrier ends'",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q4",
+      "stem": "Why does the planner restrict parallelization to contiguous safe runs instead of moving every safe call ahead of unsafe barriers?",
+      "choices": [
+        "Moving later calls across a barrier can violate emission order and causal dependencies",
+        "Safe calls cannot run concurrently with one another",
+        "Shell commands always produce duplicate results",
+        "Contiguous runs use fewer model tokens"
+      ],
+      "correct_index": 0,
+      "explanation": "The optimization must preserve program semantics, not merely maximize overlap. Pulling later safe calls across an earlier barrier can make them observe stale state or violate the emitted order. The other choices are not planner invariants stated in the source.",
+      "mechanism_tags": ["semantic-preservation", "ordering", "dependency"],
+      "source_anchor": "Post diagram, SEGMENT PLANNER: 'contiguous runs only - emission order never reordered'",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q5",
+      "stem": "Two otherwise safe tool calls touch overlapping file paths. What behavior is required by the diagram's invariants?",
+      "choices": [
+        "Run them concurrently because both calls are individually safe",
+        "Discard the later call as redundant",
+        "Split them into ordered runs so the overlapping paths do not execute concurrently",
+        "Move both calls after the next unsafe barrier"
+      ],
+      "correct_index": 2,
+      "explanation": "Individual safety is not enough when resource footprints conflict. The source explicitly says overlapping file paths split into ordered runs. Blind concurrency risks a race; dropping or arbitrarily moving a call changes turn semantics.",
+      "mechanism_tags": ["path-overlap", "conflict-detection", "ordered-runs"],
+      "source_anchor": "Post diagram, INVARIANTS: 'overlapping file paths split into ordered runs'",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q6",
+      "stem": "Which property is NOT promised by segmented tool batch dispatch?",
+      "choices": [
+        "One result is returned per call, in call order",
+        "Every safe call in the turn starts immediately at time zero",
+        "No call starts before an earlier barrier ends",
+        "Budget and steer finalize exactly once per turn"
+      ],
+      "correct_index": 1,
+      "explanation": "A safe call can still sit after an earlier barrier or in a later ordered run, so safety does not imply time-zero start. The other three choices are listed invariants in the diagram.",
+      "mechanism_tags": ["invariants", "barrier-semantics", "result-order"],
+      "source_anchor": "Post diagram, INVARIANTS: one result per call; earlier barriers; budget + steer finalize once",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q7",
+      "stem": "The announcement reports 1.16 s versus 2.0 s sequential, a 42% wall-time cut, 22 new tests, and 5,643 agent-suite tests green. What is the strongest warranted conclusion?",
+      "choices": [
+        "Every Hermes workload is now exactly 42% faster",
+        "The optimization is proven free of all possible concurrency bugs",
+        "Only synthetic unit tests improved; no live execution was measured",
+        "The implementation showed a large gain on the stated live mixed-batch case and passed broad regression checks, but the 42% figure is workload-specific"
+      ],
+      "correct_index": 3,
+      "explanation": "The live E2E timing supports the stated example, while the new and existing tests add regression evidence. Neither one benchmark nor a green suite proves a universal speedup or eliminates every possible race. The source explicitly labels the 42% cut as a 3-reads-plus-1-barrier case.",
+      "mechanism_tags": ["benchmark-interpretation", "regression-evidence", "claim-bounds"],
+      "source_anchor": "Post diagram, VALIDATION: '22 new tests', '5,643 agent suite green', 'live E2E: 1.16s vs 2.0s sequential', '42% wall-time cut on 3 reads + 1 barrier'",
+      "transfer_type": "in_context"
+    },
+    {
+      "id": "q8",
+      "stem": "NO-HINT: An agent emits two independent reads, then a mutating command, then a read that inspects the mutation's output. Which schedule is fastest without changing what the final read can observe?",
+      "choices": [
+        "Run the first two reads together; wait; run the mutation alone; wait; run the final read",
+        "Run all three reads together; then run the mutation",
+        "Run the mutation alongside the first two reads; then run the final read",
+        "Run all four calls concurrently and sort the returned results afterward"
+      ],
+      "correct_index": 0,
+      "explanation": "The first two independent reads form one safe parallel segment. The mutation is an ordered barrier, and the observing read must remain after it. Sorting results later cannot repair side effects or stale observations; moving or overlapping the mutation changes causal execution.",
+      "mechanism_tags": ["no-hint-transfer", "side-effects", "causal-barrier"],
+      "source_anchor": "Transfer from the post's segmented-run mechanism and invariants: contiguous safe runs, sequential barriers, and no call before an earlier barrier ends",
+      "transfer_type": "no_hint"
+    },
+    {
+      "id": "q9",
+      "stem": "The emitted batch is [safe search A, safe search B, a call with malformed arguments, safe search C, safe search D]. How does the implemented planner contain the malformed call without discarding available speed?",
+      "choices": [
+        "Reject the entire turn before any tool runs",
+        "Run the whole batch serially because one call is malformed",
+        "Run A/B in parallel, treat the malformed call as a sequential barrier, then run C/D in parallel",
+        "Silently drop the malformed call and run A/B/C/D together"
+      ],
+      "correct_index": 2,
+      "explanation": "Unparseable or non-dict arguments become a barrier, but they no longer poison unrelated safe runs on either side. Rejecting or fully serializing the batch loses recoverable work; dropping the call would violate the one-result-per-call invariant.",
+      "mechanism_tags": ["malformed-arguments", "fault-containment", "barrier"],
+      "source_anchor": "Upstream commit 271a9d8: _plan_tool_batch_segments and test_malformed_args_call_is_a_barrier_not_a_batch_poison",
+      "transfer_type": "in_context"
+    }
+  ],
+  "critic_notes": "Grounding combines the exact release post/diagram with upstream implementation commit 271a9d8 and its 400-line segmentation regression test. The new code was inspected but not executed on this machine because the installed Hermes runtime predates the commit. The 42% timing applies to one live 3-read-plus-1-barrier case and must not be generalized to all turns; this pack tests the published mechanism and claim bounds, not universal performance or implementation completeness.",
+  "forge_version": "1.1.0"
+}
